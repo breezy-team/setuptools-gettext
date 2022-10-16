@@ -29,6 +29,9 @@ import os
 import re
 
 
+__version__ = (0, 1, 0)
+
+
 class build_mo(Command):
     """Subcommand of build command: build_mo"""
 
