@@ -29,8 +29,11 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
-          sudo apt install gettext
           python -m pip install --upgrade setuptools
+      - name: Install dependencies (Ubuntu)
+        run: |
+          sudo apt install gettext
+        if: "matrix.os == 'ubuntu-latest'"
       - name: Style checks
         run: |
           pip install -U flake8
