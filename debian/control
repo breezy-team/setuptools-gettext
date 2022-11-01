@@ -6,6 +6,7 @@ Build-Depends: debhelper-compat (= 13),
                python3-setuptools (>= 46.1)
 Testsuite: autopkgtest-pkg-python
 Source: python-setuptools-gettext
+Homepage: https://github.com/breezy-team/setuptools-gettext
 
 Package: python3-setuptools-gettext
 Depends: ${python3:Depends}, ${misc:Depends}
