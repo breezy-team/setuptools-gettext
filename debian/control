@@ -8,7 +8,7 @@ Testsuite: autopkgtest-pkg-python
 Source: python-setuptools-gettext
 
 Package: python3-setuptools-gettext
-Depends: ${python3:Depends}
+Depends: ${python3:Depends}, ${misc:Depends}
 Architecture: all
 Description: Setuptools gettext extension plugin
  # setuptools plugin for gettext
