@@ -10,3 +10,7 @@ Source: python-setuptools-gettext
 Package: python3-setuptools-gettext
 Depends: ${python3:Depends}
 Architecture: all
+Description: Setuptools gettext extension plugin
+ # setuptools plugin for gettext
+ .
+ Compile .po files into .mo files.
