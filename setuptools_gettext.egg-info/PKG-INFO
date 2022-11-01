@@ -1,0 +1,27 @@
+Metadata-Version: 2.1
+Name: setuptools-gettext
+Version: 0.1.0
+Summary: Setuptools gettext extension plugin
+Home-page: https://github.com/breezy-team/setuptools-gettext
+Maintainer: Breezy Developers
+Maintainer-email: breezy-core@googlegroups.com
+License: GPLv2 or later
+Keywords: distutils,setuptools,gettext
+Classifier: Topic :: Software Development :: Version Control
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Intended Audience :: Developers
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Operating System :: POSIX
+Classifier: Operating System :: MacOS :: MacOS X
+Classifier: Operating System :: Microsoft :: Windows
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown
+License-File: COPYING
+
+# setuptools plugin for gettext
+
+Compile .po files into .mo files.
