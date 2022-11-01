@@ -9,6 +9,7 @@ Source: python-setuptools-gettext
 Homepage: https://github.com/breezy-team/setuptools-gettext
 Priority: optional
 Section: python
+Maintainer: Jelmer Vernooĳ <jelmer@debian.org>
 
 Package: python3-setuptools-gettext
 Depends: ${python3:Depends}, ${misc:Depends}
