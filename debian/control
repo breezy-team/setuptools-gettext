@@ -1,0 +1,12 @@
+Rules-Requires-Root: no
+Standards-Version: 4.6.1.0
+Build-Depends: debhelper-compat (= 13),
+               dh-sequence-python3,
+               python3-all,
+               python3-setuptools (>= 46.1)
+Testsuite: autopkgtest-pkg-python
+Source: python-setuptools-gettext
+
+Package: python3-setuptools-gettext
+Depends: ${python3:Depends}
+Architecture: all
