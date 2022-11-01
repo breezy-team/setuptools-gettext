@@ -2,29 +2,15 @@ Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: setuptools-gettext
 
 Files: *
-Copyright: Unknown
+Copyright:
+  2007, 2009, 2011 Canonical Ltd.
+  2022 Breezy Developers
 License: GPL-2+
-Comment: No explicit license found, using license(s) from:
- COPYING
-
-Files: COPYING build/* dist/setuptools-gettext-0.1.0.tar.gz setuptools_gettext/*
-Copyright: 2022, Breezy Developers
-           2007-2011, Canonical Ltd
-           1989-1991, Free Software Foundation, Inc
-License: GPL-2+
-
-Files: PKG-INFO setup.cfg setuptools_gettext.egg-info/PKG-INFO
-Copyright: Unknown
-License: GPL-2
 
 Files: debian/*
-Copyright: Unknown
+Copyright: 2022 Jelmer Vernooij <jelmer@debian.org>
 License: GPL-2+
-Comment: No explicit license found, using license(s) from:
- COPYING
-
-License: GPL-2
-Comment: Add the corresponding license text here
 
 License: GPL-2+
-Comment: Add the corresponding license text here
+ On Debian systems the full text of the GNU General Public License version 2
+ can be found in the `/usr/share/common-licenses/GPL-2' file.
