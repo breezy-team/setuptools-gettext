@@ -1,5 +1,5 @@
 python-setuptools-gettext (0+git20221020.1.bf75db7-1) UNRELEASED; urgency=low
 
-  * Initial release.
+  * Initial release. Closes: #1024450
 
  -- Jelmer Vernooĳ <jelmer@debian.org>  Tue, 01 Nov 2022 09:08:01 +0000
