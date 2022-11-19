@@ -17,5 +17,6 @@ Package: python3-setuptools-gettext
 Depends: ${python3:Depends}, ${misc:Depends}
 Architecture: all
 Description: Setuptools gettext extension plugin
- This extension for setuptools automatically compiles
- .po files.
+ This extension for Python setuptools searches for
+ gettext .po files in the source directory, compiles them
+ to .po files and installs them.
