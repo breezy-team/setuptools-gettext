@@ -1,4 +1,4 @@
-python-setuptools-gettext (0+git20221020.1.bf75db7-1) UNRELEASED; urgency=low
+python-setuptools-gettext (0+git20221020.1.bf75db7-1) unstable; urgency=low
 
   * Initial release. Closes: #1024450
 
