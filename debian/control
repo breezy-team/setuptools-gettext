@@ -19,4 +19,4 @@ Architecture: all
 Description: Setuptools gettext extension plugin
  This extension for Python setuptools searches for
  gettext .po files in the source directory, compiles them
- to .po files and installs them.
+ to .mo files and installs them.
