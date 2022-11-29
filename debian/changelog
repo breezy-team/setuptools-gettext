@@ -1,9 +1,9 @@
-python-setuptools-gettext (0+git20221020.1.bf75db7-2) UNRELEASED; urgency=medium
+python-setuptools-gettext (0+git20221020.1.bf75db7-2) unstable; urgency=medium
 
   * Fix typo in description. Closes: #1024787
   * Source-only upload.
 
- -- Jelmer Vernooĳ <jelmer@debian.org>  Thu, 24 Nov 2022 21:51:38 +0000
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Tue, 29 Nov 2022 10:02:18 +0000
 
 python-setuptools-gettext (0+git20221020.1.bf75db7-1) unstable; urgency=low
 
