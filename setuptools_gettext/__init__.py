@@ -21,13 +21,12 @@
 
 """build_mo command for setup.py"""
 
+import os
+import re
 from distutils import log
 from distutils.core import Command
 from distutils.dep_util import newer
 from distutils.spawn import find_executable
-import os
-import re
-
 
 __version__ = (0, 1, 2)
 
