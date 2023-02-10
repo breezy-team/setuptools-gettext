@@ -28,7 +28,7 @@ from distutils.core import Command
 from distutils.dep_util import newer
 from distutils.spawn import find_executable
 
-__version__ = (0, 1, 2)
+__version__ = (0, 1, 3)
 
 
 class build_mo(Command):
