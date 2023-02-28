@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=46.1"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "setuptools-gettext"
+maintainers = [{name = "Breezy Developers", email = "breezy-core@googlegroups.com"}]
+license = {text = "GPLv2 or later"}
+description = "Setuptools gettext extension plugin"
+keywords = ["distutils", "setuptools", "gettext"]
+classifiers = [
+    "Topic :: Software Development :: Version Control",
+    "License :: OSI Approved :: Apache Software License",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Operating System :: POSIX",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
+]
+requires-python = ">=3.7"
+dependencies = ["setuptools>=46.1"]
+dynamic = ["version"]
+
+[project.readme]
+file = "README.md"
+content-type = "text/markdown"
+
+[project.urls]
+Homepage = "https://github.com/breezy-team/setuptools-gettext"
+
+[project.entry-points."distutils.commands"]
+build_mo = "setuptools_gettext:build_mo"
+
+[tool.setuptools]
+packages = ["setuptools_gettext"]
+zip-safe = true
+include-package-data = false
+
+[tool.setuptools.dynamic]
+version = {attr = "setuptools_gettext.__version__"}
+
+[tool.mypy]
+ignore_missing_imports = true
+
+[tool.flake8]
+exclude = "build"
