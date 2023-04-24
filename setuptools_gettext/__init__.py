@@ -23,6 +23,7 @@
 
 import os
 import re
+from typing import List
 from distutils import log
 from distutils.core import Command
 from distutils.dep_util import newer
@@ -33,7 +34,7 @@ from distutils.command.clean import clean
 __version__ = (0, 1, 4)
 
 
-def lang_from_dir(source_dir: os.PathLike) -> list[str]:
+def lang_from_dir(source_dir: os.PathLike) -> List[str]:
     re_po = re.compile(r'^([a-zA-Z_]+)\.po$')
     lang = []
     for i in os.listdir(source_dir):
@@ -43,7 +44,7 @@ def lang_from_dir(source_dir: os.PathLike) -> list[str]:
     return lang
 
 
-def parse_lang(lang: str) -> list[str]:
+def parse_lang(lang: str) -> List[str]:
     return [i.strip() for i in lang.split(',') if i.strip()]
 
 
@@ -72,6 +73,7 @@ class build_mo(Command):
         self.source_dir = None
         self.force = None
         self.lang = None
+        self.outfiles = []
 
     def finalize_options(self):
         self.set_undefined_options('build', ('force', 'force'))
@@ -86,6 +88,15 @@ class build_mo(Command):
             self.lang = lang_from_dir(self.source_dir)
         else:
             self.lang = parse_lang(self.lang)
+
+    def get_inputs(self):
+        inputs = []
+        for lang in self.lang:
+            po = os.path.join('po', lang + '.po')
+            if not os.path.isfile(po):
+                po = os.path.join('po', lang + '.po')
+            inputs.append(po)
+        return inputs
 
     def run(self):
         """Run msgfmt for each language"""
@@ -126,6 +137,10 @@ class build_mo(Command):
             if self.force or newer(po, mo):
                 log.info('Compile: %s -> %s' % (po, mo))
                 self.spawn(['msgfmt', '-o', mo, po])
+                self.outfiles.append(mo)
+
+    def get_outputs(self):
+        return self.outfiles
 
 
 class clean_mo(Command):
