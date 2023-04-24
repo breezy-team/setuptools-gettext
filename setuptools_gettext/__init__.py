@@ -27,8 +27,24 @@ from distutils import log
 from distutils.core import Command
 from distutils.dep_util import newer
 from distutils.spawn import find_executable
+from distutils.command.build import build
+from distutils.command.clean import clean
 
-__version__ = (0, 1, 3)
+__version__ = (0, 1, 4)
+
+
+def lang_from_dir(source_dir: os.PathLike) -> list[str]:
+    re_po = re.compile(r'^([a-zA-Z_]+)\.po$')
+    lang = []
+    for i in os.listdir(source_dir):
+        mo = re_po.match(i)
+        if mo:
+            lang.append(mo.group(1))
+    return lang
+
+
+def parse_lang(lang: str) -> list[str]:
+    return [i.strip() for i in lang.split(',') if i.strip()]
 
 
 class build_mo(Command):
@@ -67,14 +83,9 @@ class build_mo(Command):
         if self.source_dir is None:
             self.source_dir = 'po'
         if self.lang is None:
-            re_po = re.compile(r'^([a-zA-Z_]+)\.po$')
-            self.lang = []
-            for i in os.listdir(self.source_dir):
-                mo = re_po.match(i)
-                if mo:
-                    self.lang.append(mo.group(1))
+            self.lang = lang_from_dir(self.source_dir)
         else:
-            self.lang = [i.strip() for i in self.lang.split(',') if i.strip()]
+            self.lang = parse_lang(self.lang)
 
     def run(self):
         """Run msgfmt for each language"""
@@ -115,3 +126,30 @@ class build_mo(Command):
             if self.force or newer(po, mo):
                 log.info('Compile: %s -> %s' % (po, mo))
                 self.spawn(['msgfmt', '-o', mo, po])
+
+
+class clean_mo(Command):
+    description = 'clean .mo files'
+
+    user_options = [('build-dir=', 'd', 'Directory to build locale files')]
+
+    def initialize_options(self):
+        self.build_dir = None
+
+    def finalize_options(self):
+        if self.build_dir is None:
+            self.build_dir = 'breezy/locale'
+
+    def run(self):
+        for root, dirs, files in os.walk(self.build_dir):
+            for file_ in files:
+                if file_.endswith('.mo'):
+                    os.unlink(os.path.join(root, file_))
+
+
+def has_gettext(d):
+    return True
+
+
+build.sub_commands.append(('build_mo', has_gettext))
+clean.sub_commands.append(('clean_mo', has_gettext))

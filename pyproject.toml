@@ -34,6 +34,7 @@ Homepage = "https://github.com/breezy-team/setuptools-gettext"
 
 [project.entry-points."distutils.commands"]
 build_mo = "setuptools_gettext:build_mo"
+clean_mo = "setuptools_gettext:clean_mo"
 
 [tool.setuptools]
 packages = ["setuptools_gettext"]
