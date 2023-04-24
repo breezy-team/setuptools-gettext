@@ -31,6 +31,20 @@ from distutils.spawn import find_executable
 __version__ = (0, 1, 3)
 
 
+def lang_from_dir(source_dir: os.PathLike) -> list[str]:
+    re_po = re.compile(r'^([a-zA-Z_]+)\.po$')
+    lang = []
+    for i in os.listdir(source_dir):
+        mo = re_po.match(i)
+        if mo:
+            lang.append(mo.group(1))
+    return lang
+
+
+def parse_lang(lang: str) -> list[str]:
+    return [i.strip() for i in lang.split(',') if i.strip()]
+
+
 class build_mo(Command):
     """Subcommand of build command: build_mo"""
 
@@ -67,14 +81,9 @@ class build_mo(Command):
         if self.source_dir is None:
             self.source_dir = 'po'
         if self.lang is None:
-            re_po = re.compile(r'^([a-zA-Z_]+)\.po$')
-            self.lang = []
-            for i in os.listdir(self.source_dir):
-                mo = re_po.match(i)
-                if mo:
-                    self.lang.append(mo.group(1))
+            self.lang = lang_from_dir(self.source_dir)
         else:
-            self.lang = [i.strip() for i in self.lang.split(',') if i.strip()]
+            self.lang = parse_lang(self.lang)
 
     def run(self):
         """Run msgfmt for each language"""
