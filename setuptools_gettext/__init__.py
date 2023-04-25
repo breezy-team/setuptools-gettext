@@ -23,13 +23,15 @@
 
 import os
 import re
-from typing import List
+from typing import List, Optional
 from distutils import log
 from distutils.core import Command
+from distutils.util import convert_path
 from distutils.dep_util import newer
 from distutils.spawn import find_executable
 from distutils.command.build import build
 from distutils.command.clean import clean
+from distutils.command.install import install
 
 __version__ = (0, 1, 4)
 
@@ -78,12 +80,12 @@ class build_mo(Command):
     def finalize_options(self):
         self.set_undefined_options('build', ('force', 'force'))
         self.prj_name = self.distribution.get_name()
-        if self.build_dir is None:
-            self.build_dir = 'breezy/locale'
         if not self.output_base:
             self.output_base = self.prj_name or 'messages'
         if self.source_dir is None:
             self.source_dir = 'po'
+        if self.build_dir is None:
+            self.build_dir = 'breezy/locale'
         if self.lang is None:
             self.lang = lang_from_dir(self.source_dir)
         else:
@@ -156,15 +158,77 @@ class clean_mo(Command):
             self.build_dir = 'breezy/locale'
 
     def run(self):
+        if not os.path.isdir(self.build_dir):
+            return
         for root, dirs, files in os.walk(self.build_dir):
             for file_ in files:
                 if file_.endswith('.mo'):
                     os.unlink(os.path.join(root, file_))
 
 
-def has_gettext(d):
-    return True
+class install_mo(Command):
+
+    description: str = "install .mo files"
+
+    user_options = [
+        (
+            'install-dir=',
+            'd',
+            "base directory for installing data files "
+            "(default: installation base dir)",
+        ),
+        ('root=', None,
+         "install everything relative to this alternate root directory"),
+        ('force', 'f', "force installation (overwrite existing files)"),
+    ]
+
+    boolean_options: List[str] = ['force']
+    build_dir: Optional[str]
+    install_dir: Optional[str]
+
+    def initialize_options(self) -> None:
+        self.install_dir = None
+        self.outfiles: List[str] = []
+        self.root: None = None
+        self.force = 0
+        self.build_dir = None
+
+    def finalize_options(self) -> None:
+        self.set_undefined_options(
+            'install',
+            ('install_data', 'install_dir'),
+            ('root', 'root'),
+            ('force', 'force'),
+        )
+        if self.build_dir is None:
+            self.build_dir = 'breezy/locale'
+
+    def run(self) -> None:
+        assert self.install_dir is not None
+        assert self.build_dir is not None
+        self.mkpath(self.install_dir)
+        import glob
+        for filepath in glob.glob(self.build_dir + "/*/LC_MESSAGES/*.mo"):
+            langfile = filepath[len(self.build_dir.rstrip('/')+'/'):]
+            targetpath = os.path.join(
+                self.install_dir,
+                os.path.dirname(os.path.join("share/locale", langfile)))
+            self.mkpath(targetpath)
+            (out, _) = self.copy_file(convert_path(filepath), targetpath)
+            self.outfiles.append(out)
+
+    def get_inputs(self):
+        import glob
+        return glob.glob(self.build_dir + "/*/LC_MESSAGES/*.mo")
+
+    def get_outputs(self):
+        return self.outfiles
+
+
+def has_gettext(_d):
+    return os.path.exists('po')
 
 
 build.sub_commands.append(('build_mo', has_gettext))
 clean.sub_commands.append(('clean_mo', has_gettext))
+install.sub_commands.append(('install_mo', has_gettext))
