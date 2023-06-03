@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (C) 2007, 2009, 2011 Canonical Ltd.
 # Copyright (C) 2022 Breezy Developers
@@ -19,19 +18,20 @@
 
 # This code is from bzr-explorer and modified for bzr.
 
-"""build_mo command for setup.py"""
+"""build_mo command for setup.py."""
 
 import os
 import re
-from typing import List, Optional
 from distutils import log
-from distutils.core import Command
-from distutils.util import convert_path
-from distutils.dep_util import newer
-from distutils.spawn import find_executable
-from distutils.command.build import build
 from distutils.command.clean import clean
 from distutils.command.install import install
+from distutils.core import Command
+from distutils.dep_util import newer
+from distutils.spawn import find_executable
+from distutils.util import convert_path
+from typing import List, Optional
+
+from setuptools.command.build import build
 
 __version__ = (0, 1, 4)
 
@@ -51,7 +51,7 @@ def parse_lang(lang: str) -> List[str]:
 
 
 class build_mo(Command):
-    """Subcommand of build command: build_mo"""
+    """Subcommand of build command: build_mo."""
 
     description = 'compile po files to mo files'
 
@@ -101,7 +101,7 @@ class build_mo(Command):
         return inputs
 
     def run(self):
-        """Run msgfmt for each language"""
+        """Run msgfmt for each language."""
         if not self.lang:
             return
 
@@ -137,7 +137,7 @@ class build_mo(Command):
             self.mkpath(dir_)
             mo = os.path.join(dir_, basename)
             if self.force or newer(po, mo):
-                log.info('Compile: %s -> %s' % (po, mo))
+                log.info(f'Compile: {po} -> {mo}')
                 self.spawn(['msgfmt', '-o', mo, po])
                 self.outfiles.append(mo)
 

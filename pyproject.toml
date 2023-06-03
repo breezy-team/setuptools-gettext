@@ -50,3 +50,27 @@ ignore_missing_imports = true
 
 [tool.flake8]
 exclude = "build"
+
+[tool.ruff]
+select = [
+    "ANN",
+    "D",
+    "E",
+    "F",
+    "I",
+    "UP",
+]
+target-version = "py37"
+line-length = 79
+ignore = [
+    "ANN001",
+    "ANN101",
+    "ANN201",
+    "D100",
+    "D101",
+    "D102",
+    "D103",
+]
+
+[tool.ruff.pydocstyle]
+convention = "google"
