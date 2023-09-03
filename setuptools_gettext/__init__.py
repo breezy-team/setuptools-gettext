@@ -232,7 +232,7 @@ class install_mo(Command):
         return self.outfiles
 
 
-def has_gettext(dist: Distribution) -> bool:
+def has_gettext(_c) -> bool:
     return os.path.isdir(SOURCE_DIR)
 
 
