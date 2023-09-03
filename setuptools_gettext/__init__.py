@@ -1,6 +1,6 @@
 #
 # Copyright (C) 2007, 2009, 2011 Canonical Ltd.
-# Copyright (C) 2022 Breezy Developers
+# Copyright (C) 2022-2023 Jelmer Vernooĳ <jelmer@jelmer.uk>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,12 +28,15 @@ from distutils.command.install import install
 from distutils.core import Command
 from distutils.dep_util import newer
 from distutils.spawn import find_executable
-from distutils.util import convert_path
+from distutils.util import convert_path, change_root
 from typing import List, Optional
 
 from setuptools.command.build import build
 
 __version__ = (0, 1, 4)
+
+
+DEFAULT_BUILD_DIR = 'locale'
 
 
 def lang_from_dir(source_dir: os.PathLike) -> List[str]:
@@ -85,7 +88,7 @@ class build_mo(Command):
         if self.source_dir is None:
             self.source_dir = 'po'
         if self.build_dir is None:
-            self.build_dir = 'breezy/locale'
+            self.build_dir = DEFAULT_BUILD_DIR
         if self.lang is None:
             self.lang = lang_from_dir(self.source_dir)
         else:
@@ -155,7 +158,7 @@ class clean_mo(Command):
 
     def finalize_options(self):
         if self.build_dir is None:
-            self.build_dir = 'breezy/locale'
+            self.build_dir = DEFAULT_BUILD_DIR
 
     def run(self):
         if not os.path.isdir(self.build_dir):
@@ -185,11 +188,12 @@ class install_mo(Command):
     boolean_options: List[str] = ['force']
     build_dir: Optional[str]
     install_dir: Optional[str]
+    root: Optional[str]
 
     def initialize_options(self) -> None:
         self.install_dir = None
         self.outfiles: List[str] = []
-        self.root: None = None
+        self.root = None
         self.force = 0
         self.build_dir = None
 
@@ -201,7 +205,7 @@ class install_mo(Command):
             ('force', 'force'),
         )
         if self.build_dir is None:
-            self.build_dir = 'breezy/locale'
+            self.build_dir = DEFAULT_BUILD_DIR
 
     def run(self) -> None:
         assert self.install_dir is not None
@@ -213,6 +217,8 @@ class install_mo(Command):
             targetpath = os.path.join(
                 self.install_dir,
                 os.path.dirname(os.path.join("share/locale", langfile)))
+            if self.root is not None:
+                targetpath = change_root(self.root, targetpath)
             self.mkpath(targetpath)
             (out, _) = self.copy_file(convert_path(filepath), targetpath)
             self.outfiles.append(out)
