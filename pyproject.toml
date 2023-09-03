@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=46.1"]
+requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -35,6 +35,9 @@ Homepage = "https://github.com/breezy-team/setuptools-gettext"
 build_mo = "setuptools_gettext:build_mo"
 clean_mo = "setuptools_gettext:clean_mo"
 install_mo = "setuptools_gettext:install_mo"
+
+[project.entry-points."setuptools.finalize_distribution_options"]
+setuptools_gettext = "setuptools_gettext:pyprojecttoml_config"
 
 [tool.setuptools]
 packages = ["setuptools_gettext"]
