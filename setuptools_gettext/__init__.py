@@ -32,10 +32,11 @@ from distutils.util import convert_path, change_root
 from typing import List, Optional
 
 from setuptools.command.build import build
+from setuptools.dist import Distribution
 
 __version__ = (0, 1, 4)
 
-
+SOURCE_DIR = 'po'
 DEFAULT_BUILD_DIR = 'locale'
 
 
@@ -86,7 +87,7 @@ class build_mo(Command):
         if not self.output_base:
             self.output_base = self.prj_name or 'messages'
         if self.source_dir is None:
-            self.source_dir = 'po'
+            self.source_dir = SOURCE_DIR
         if self.build_dir is None:
             self.build_dir = DEFAULT_BUILD_DIR
         if self.lang is None:
@@ -97,9 +98,9 @@ class build_mo(Command):
     def get_inputs(self):
         inputs = []
         for lang in self.lang:
-            po = os.path.join('po', lang + '.po')
+            po = os.path.join(SOURCE_DIR, lang + '.po')
             if not os.path.isfile(po):
-                po = os.path.join('po', lang + '.po')
+                po = os.path.join(SOURCE_DIR, lang + '.po')
             inputs.append(po)
         return inputs
 
@@ -133,9 +134,9 @@ class build_mo(Command):
             basename += '.mo'
 
         for lang in self.lang:
-            po = os.path.join('po', lang + '.po')
+            po = os.path.join(SOURCE_DIR, lang + '.po')
             if not os.path.isfile(po):
-                po = os.path.join('po', lang + '.po')
+                po = os.path.join(SOURCE_DIR, lang + '.po')
             dir_ = os.path.join(self.build_dir, lang, 'LC_MESSAGES')
             self.mkpath(dir_)
             mo = os.path.join(dir_, basename)
@@ -231,8 +232,12 @@ class install_mo(Command):
         return self.outfiles
 
 
-def has_gettext(_d):
-    return os.path.exists('po')
+def has_gettext(_c) -> bool:
+    return os.path.isdir(SOURCE_DIR)
+
+
+def pyprojecttoml_config(dist: Distribution) -> None:
+    pass
 
 
 build.sub_commands.append(('build_mo', has_gettext))
