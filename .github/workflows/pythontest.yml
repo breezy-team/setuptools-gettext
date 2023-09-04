@@ -1,0 +1,40 @@
+name: Python tests
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "0 6 * * *" # Daily 6AM UTC build
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version:
+          ["3.7", "3.8", "3.9", "3.10", "3.11"]
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade setuptools
+      - name: Install dependencies (Ubuntu)
+        run: |
+          sudo apt install gettext
+        if: "matrix.os == 'ubuntu-latest'"
+      - name: Style checks
+        run: |
+          pip install -U flake8
+          python -m flake8
+      - name: Typing checks
+        run: |
+          pip install -U mypy types-setuptools
+          python -m mypy setuptools_gettext
+        if: "matrix.python-version != 'pypy3'"

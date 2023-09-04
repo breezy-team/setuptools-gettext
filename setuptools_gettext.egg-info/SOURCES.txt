@@ -1,7 +1,11 @@
+.gitignore
 COPYING
 README.md
-setup.cfg
+disperse.conf
+pyproject.toml
 setup.py
+.github/workflows/disperse.yml
+.github/workflows/pythontest.yml
 setuptools_gettext/__init__.py
 setuptools_gettext.egg-info/PKG-INFO
 setuptools_gettext.egg-info/SOURCES.txt
