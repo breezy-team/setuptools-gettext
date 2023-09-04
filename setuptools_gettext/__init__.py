@@ -23,6 +23,7 @@
 import os
 import re
 from distutils import log
+from distutils.command.build import build
 from distutils.command.clean import clean
 from distutils.command.install import install
 from distutils.core import Command
@@ -31,7 +32,6 @@ from distutils.spawn import find_executable
 from distutils.util import convert_path, change_root
 from typing import List, Optional
 
-from setuptools.command.build import build
 from setuptools.dist import Distribution
 
 __version__ = (0, 1, 4)
