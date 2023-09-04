@@ -34,7 +34,7 @@ from typing import List, Optional
 
 from setuptools.dist import Distribution
 
-__version__ = (0, 1, 4)
+__version__ = (0, 1, 5)
 
 SOURCE_DIR = 'po'
 DEFAULT_BUILD_DIR = 'locale'
