@@ -1,0 +1,5 @@
+dist
+build
+setuptools_gettext.egg-info
+*~
+__pycache__

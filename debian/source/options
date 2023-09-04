@@ -1,0 +1,1 @@
+extend-diff-ignore = "^\setuptools-gettext.egg-info/.*$"
