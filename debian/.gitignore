@@ -1,0 +1,6 @@
+.debhelper
+*.debhelper
+*.substvars
+python3-setuptools-gettext
+debhelper-build-stamp
+files
