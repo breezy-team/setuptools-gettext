@@ -14,7 +14,7 @@ Vcs-Git: https://salsa.debian.org/jelmer/python-setuptools-gettext.git
 Vcs-Browser: https://salsa.debian.org/jelmer/python-setuptools-gettext
 
 Package: python3-setuptools-gettext
-Depends: ${python3:Depends}, ${misc:Depends}
+Depends: ${python3:Depends}, ${misc:Depends}, python3-setuptools
 Architecture: all
 Description: Setuptools gettext extension plugin
  This extension for Python setuptools searches for
