@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: setuptools-gettext
-Version: 0.1.4
+Version: 0.1.5
 Summary: Setuptools gettext extension plugin
 Maintainer-email: Breezy Developers <breezy-core@googlegroups.com>
 Project-URL: Homepage, https://github.com/breezy-team/setuptools-gettext
