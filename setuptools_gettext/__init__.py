@@ -23,9 +23,6 @@
 import os
 import re
 from distutils import log
-from distutils.command.build import build
-from distutils.command.clean import clean
-from distutils.command.install import install
 from distutils.core import Command
 from distutils.dep_util import newer
 from distutils.spawn import find_executable
@@ -237,9 +234,9 @@ def has_gettext(_c) -> bool:
 
 
 def pyprojecttoml_config(dist: Distribution) -> None:
-    pass
-
-
-build.sub_commands.append(('build_mo', has_gettext))
-clean.sub_commands.append(('clean_mo', has_gettext))
-install.sub_commands.append(('install_mo', has_gettext))
+    build = dist.get_command_class("build")
+    build.sub_commands.append(('build_mo', has_gettext))
+    clean = dist.get_command_class("clean")
+    clean.sub_commands.append(('clean_mo', has_gettext))
+    install = dist.get_command_class("install")
+    install.sub_commands.append(('install_mo', has_gettext))
