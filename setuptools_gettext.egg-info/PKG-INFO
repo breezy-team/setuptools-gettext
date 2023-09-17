@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: setuptools-gettext
-Version: 0.1.5
+Version: 0.1.6
 Summary: Setuptools gettext extension plugin
 Maintainer-email: Breezy Developers <breezy-core@googlegroups.com>
 Project-URL: Homepage, https://github.com/breezy-team/setuptools-gettext
@@ -18,7 +18,6 @@ Classifier: Operating System :: MacOS :: MacOS X
 Classifier: Operating System :: Microsoft :: Windows
 Requires-Python: >=3.7
 Description-Content-Type: text/markdown
-License-File: COPYING
 
 # setuptools plugin for gettext
 
