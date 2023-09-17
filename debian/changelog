@@ -1,3 +1,9 @@
+python-setuptools-gettext (0.1.6-1) UNRELEASED; urgency=low
+
+  * New upstream release.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Sun, 17 Sep 2023 11:53:02 -0000
+
 python-setuptools-gettext (0.1.5-1) unstable; urgency=low
 
   * New upstream release.
