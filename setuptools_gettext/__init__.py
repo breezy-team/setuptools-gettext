@@ -22,6 +22,7 @@
 
 import os
 import re
+import sys
 from distutils import log
 from distutils.core import Command
 from distutils.dep_util import newer
