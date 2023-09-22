@@ -24,9 +24,9 @@ import logging
 import os
 import re
 import sys
-from setuptools import Command
 from typing import List, Optional
 
+from setuptools import Command
 from setuptools.dist import Distribution
 
 __version__ = (0, 1, 6)
@@ -81,7 +81,9 @@ class build_mo(Command):
             self.output_base = self.prj_name or 'messages'
         self.source_dir = self.distribution.gettext_source_dir
         if self.build_dir is None:
-            self.build_dir = getattr(self.distribution, 'gettext_build_dir', None) or DEFAULT_BUILD_DIR
+            self.build_dir = (
+                getattr(self.distribution, 'gettext_build_dir', None)
+                or DEFAULT_BUILD_DIR)
         if self.lang is None:
             self.lang = lang_from_dir(self.source_dir)
         else:
@@ -151,7 +153,9 @@ class clean_mo(Command):
 
     def finalize_options(self):
         if self.build_dir is None:
-            self.build_dir = getattr(self.distribution, 'gettext_build_dir', None) or DEFAULT_BUILD_DIR
+            self.build_dir = (
+                getattr(self.distribution, 'gettext_build_dir', None)
+                or DEFAULT_BUILD_DIR)
 
     def run(self):
         if not os.path.isdir(self.build_dir):
@@ -225,7 +229,7 @@ class install_mo(Command):
 
 
 def has_gettext(_c) -> bool:
-    return os.path.isdir(SOURCE_DIR)
+    return os.path.isdir(DEFAULT_SOURCE_DIR)
 
 
 def pyprojecttoml_config(dist: Distribution) -> None:
