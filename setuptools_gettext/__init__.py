@@ -20,10 +20,10 @@
 
 """build_mo command for setup.py."""
 
+import logging
 import os
 import re
 import sys
-from distutils import log
 from distutils.core import Command
 from distutils.dep_util import newer
 from distutils.util import convert_path, change_root
@@ -107,16 +107,16 @@ class build_mo(Command):
             return
 
         if find_executable('msgfmt') is None:
-            log.warn("GNU gettext msgfmt utility not found!")
-            log.warn("Skip compiling po files.")
+            logging.warn("GNU gettext msgfmt utility not found!")
+            logging.warn("Skip compiling po files.")
             return
 
         if 'en' in self.lang:
             if find_executable('msginit') is None:
-                log.warn("GNU gettext msginit utility not found!")
-                log.warn("Skip creating English PO file.")
+                logging.warn("GNU gettext msginit utility not found!")
+                logging.warn("Skip creating English PO file.")
             else:
-                log.info('Creating English PO file...')
+                logging.info('Creating English PO file...')
                 pot = (self.prj_name or 'messages') + '.pot'
                 en_po = 'en.po'
                 self.spawn(['msginit',
@@ -138,7 +138,7 @@ class build_mo(Command):
             self.mkpath(dir_)
             mo = os.path.join(dir_, basename)
             if self.force or newer(po, mo):
-                log.info(f'Compile: {po} -> {mo}')
+                logging.info(f'Compile: {po} -> {mo}')
                 self.spawn(['msgfmt', '-o', mo, po])
                 self.outfiles.append(mo)
 
