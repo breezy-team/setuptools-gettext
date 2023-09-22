@@ -202,7 +202,8 @@ class install_mo(Command):
             ('force', 'force'),
         )
         if self.build_dir is None:
-            self.build_dir = self.distribution.gettext_build_dir
+            self.build_dir = (
+                self.distribution.gettext_build_dir)  # type: ignore
 
     def run(self) -> None:
         assert self.install_dir is not None
@@ -257,8 +258,10 @@ def pyprojecttoml_config(dist: Distribution) -> None:
 
 
 def load_pyproject_config(dist: Distribution, cfg) -> None:
-    dist.gettext_source_dir = cfg.get("source_dir") or DEFAULT_SOURCE_DIR
-    dist.gettext_build_dir = cfg.get("build_dir") or DEFAULT_BUILD_DIR
+    dist.gettext_source_dir = (  # type: ignore
+        cfg.get("source_dir") or DEFAULT_SOURCE_DIR)
+    dist.gettext_build_dir = (  # type: ignore
+        cfg.get("build_dir") or DEFAULT_BUILD_DIR)
 
 
 def find_executable(executable):
