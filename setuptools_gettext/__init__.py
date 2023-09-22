@@ -33,7 +33,7 @@ from setuptools.dist import Distribution
 
 __version__ = (0, 1, 6)
 
-SOURCE_DIR = 'po'
+DEFAULT_SOURCE_DIR = 'po'
 DEFAULT_BUILD_DIR = 'locale'
 
 
@@ -62,7 +62,6 @@ class build_mo(Command):
     #   - help string.
     user_options = [('build-dir=', 'd', 'Directory to build locale files'),
                     ('output-base=', 'o', 'mo-files base name'),
-                    ('source-dir=', None, 'Directory with sources po files'),
                     ('force', 'f', 'Force creation of mo files'),
                     ('lang=', None, 'Comma-separated list of languages '
                                     'to process'),
@@ -73,7 +72,6 @@ class build_mo(Command):
     def initialize_options(self):
         self.build_dir = None
         self.output_base = None
-        self.source_dir = None
         self.force = None
         self.lang = None
         self.outfiles = []
@@ -83,10 +81,9 @@ class build_mo(Command):
         self.prj_name = self.distribution.get_name()
         if not self.output_base:
             self.output_base = self.prj_name or 'messages'
-        if self.source_dir is None:
-            self.source_dir = SOURCE_DIR
+        self.source_dir = self.distribution.gettext_source_dir
         if self.build_dir is None:
-            self.build_dir = DEFAULT_BUILD_DIR
+            self.build_dir = getattr(self.distribution, 'gettext_build_dir', None) or DEFAULT_BUILD_DIR
         if self.lang is None:
             self.lang = lang_from_dir(self.source_dir)
         else:
@@ -95,9 +92,9 @@ class build_mo(Command):
     def get_inputs(self):
         inputs = []
         for lang in self.lang:
-            po = os.path.join(SOURCE_DIR, lang + '.po')
+            po = os.path.join(self.source_dir, lang + '.po')
             if not os.path.isfile(po):
-                po = os.path.join(SOURCE_DIR, lang + '.po')
+                po = os.path.join(self.source_dir, lang + '.po')
             inputs.append(po)
         return inputs
 
@@ -131,9 +128,9 @@ class build_mo(Command):
             basename += '.mo'
 
         for lang in self.lang:
-            po = os.path.join(SOURCE_DIR, lang + '.po')
+            po = os.path.join(self.source_dir, lang + '.po')
             if not os.path.isfile(po):
-                po = os.path.join(SOURCE_DIR, lang + '.po')
+                po = os.path.join(self.source_dir, lang + '.po')
             dir_ = os.path.join(self.build_dir, lang, 'LC_MESSAGES')
             self.mkpath(dir_)
             mo = os.path.join(dir_, basename)
@@ -156,7 +153,7 @@ class clean_mo(Command):
 
     def finalize_options(self):
         if self.build_dir is None:
-            self.build_dir = DEFAULT_BUILD_DIR
+            self.build_dir = getattr(self.distribution, 'gettext_build_dir', None) or DEFAULT_BUILD_DIR
 
     def run(self):
         if not os.path.isdir(self.build_dir):
@@ -203,7 +200,7 @@ class install_mo(Command):
             ('force', 'force'),
         )
         if self.build_dir is None:
-            self.build_dir = DEFAULT_BUILD_DIR
+            self.build_dir = self.distribution.gettext_build_dir
 
     def run(self) -> None:
         assert self.install_dir is not None
@@ -240,3 +237,72 @@ def pyprojecttoml_config(dist: Distribution) -> None:
     clean.sub_commands.append(('clean_mo', has_gettext))
     install = dist.get_command_class("install")
     install.sub_commands.append(('install_mo', has_gettext))
+
+    if sys.version_info[:2] >= (3, 11):
+        from tomllib import load as toml_load
+    else:
+        from tomli import load as toml_load
+    try:
+        with open("pyproject.toml", "rb") as f:
+            cfg = toml_load(f).get("tool", {}).get("setuptools-gettext")
+    except FileNotFoundError:
+        load_pyproject_config(dist, {})
+    else:
+        if cfg:
+            load_pyproject_config(dist, cfg)
+        else:
+            load_pyproject_config(dist, {})
+
+
+def load_pyproject_config(dist: Distribution, cfg) -> None:
+    dist.gettext_source_dir = cfg.get("source_dir") or DEFAULT_SOURCE_DIR
+    dist.gettext_build_dir = cfg.get("build_dir") or DEFAULT_BUILD_DIR
+
+
+def find_executable(executable):
+    _, ext = os.path.splitext(executable)
+    if sys.platform == 'win32' and ext != '.exe':
+        executable = executable + '.exe'
+
+    if os.path.isfile(executable):
+        return executable
+
+    path = os.environ.get('PATH', os.defpath)
+
+    # PATH='' doesn't match, whereas PATH=':' looks in the current directory
+    if not path:
+        return None
+
+    paths = path.split(os.pathsep)
+    for p in paths:
+        f = os.path.join(p, executable)
+        if os.path.isfile(f):
+            return f
+    return None
+
+
+def newer(source, target) -> bool:
+    if not os.path.exists(target):
+        return True
+
+    from stat import ST_MTIME
+
+    mtime1 = os.stat(source)[ST_MTIME]
+    mtime2 = os.stat(target)[ST_MTIME]
+
+    return mtime1 > mtime2
+
+
+def change_root(new_root, pathname):
+    if os.name == 'posix':
+        if not os.path.isabs(pathname):
+            return os.path.join(new_root, pathname)
+        else:
+            return os.path.join(new_root, pathname[1:])
+    elif os.name == 'nt':
+        (drive, path) = os.path.splitdrive(pathname)
+        if path[0] == '\\':
+            path = path[1:]
+        return os.path.join(new_root, path)
+    else:
+        raise AssertionError("Unsupported OS: %s" % os.name)
