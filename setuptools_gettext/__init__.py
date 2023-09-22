@@ -22,10 +22,10 @@
 
 import os
 import re
+import sys
 from distutils import log
 from distutils.core import Command
 from distutils.dep_util import newer
-from distutils.spawn import find_executable
 from distutils.util import convert_path, change_root
 from typing import List, Optional
 
@@ -240,3 +240,25 @@ def pyprojecttoml_config(dist: Distribution) -> None:
     clean.sub_commands.append(('clean_mo', has_gettext))
     install = dist.get_command_class("install")
     install.sub_commands.append(('install_mo', has_gettext))
+
+
+def find_executable(executable):
+    _, ext = os.path.splitext(executable)
+    if sys.platform == 'win32' and ext != '.exe':
+        executable = executable + '.exe'
+
+    if os.path.isfile(executable):
+        return executable
+
+    path = os.environ.get('PATH', os.defpath)
+
+    # PATH='' doesn't match, whereas PATH=':' looks in the current directory
+    if not path:
+        return None
+
+    paths = path.split(os.pathsep)
+    for p in paths:
+        f = os.path.join(p, executable)
+        if os.path.isfile(f):
+            return f
+    return None
