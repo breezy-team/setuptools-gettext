@@ -1,0 +1,7 @@
+[distutils.commands]
+build_mo = setuptools_gettext:build_mo
+clean_mo = setuptools_gettext:clean_mo
+install_mo = setuptools_gettext:install_mo
+
+[setuptools.finalize_distribution_options]
+setuptools_gettext = setuptools_gettext:pyprojecttoml_config

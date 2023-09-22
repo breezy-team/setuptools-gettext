@@ -1,0 +1,16 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: setuptools-gettext
+
+Files: *
+Copyright:
+  2007, 2009, 2011 Canonical Ltd.
+  2022 Breezy Developers
+License: GPL-2+
+
+Files: debian/*
+Copyright: 2022 Jelmer Vernooij <jelmer@debian.org>
+License: GPL-2+
+
+License: GPL-2+
+ On Debian systems the full text of the GNU General Public License version 2
+ can be found in the `/usr/share/common-licenses/GPL-2' file.

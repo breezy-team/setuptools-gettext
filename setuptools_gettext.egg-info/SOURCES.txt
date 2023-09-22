@@ -1,0 +1,16 @@
+.gitignore
+COPYING
+README.md
+disperse.conf
+pyproject.toml
+setup.py
+.github/workflows/disperse.yml
+.github/workflows/pythontest.yml
+setuptools_gettext/__init__.py
+setuptools_gettext.egg-info/PKG-INFO
+setuptools_gettext.egg-info/SOURCES.txt
+setuptools_gettext.egg-info/dependency_links.txt
+setuptools_gettext.egg-info/entry_points.txt
+setuptools_gettext.egg-info/requires.txt
+setuptools_gettext.egg-info/top_level.txt
+setuptools_gettext.egg-info/zip-safe

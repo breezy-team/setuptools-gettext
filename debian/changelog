@@ -1,0 +1,30 @@
+python-setuptools-gettext (0.1.6-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Sun, 17 Sep 2023 11:53:28 +0100
+
+python-setuptools-gettext (0.1.5-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Wed, 06 Sep 2023 01:35:06 +0100
+
+python-setuptools-gettext (0.1.4-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Mon, 04 Sep 2023 11:44:36 +0100
+
+python-setuptools-gettext (0+git20221020.1.bf75db7-2) unstable; urgency=medium
+
+  * Fix typo in description. Closes: #1024787
+  * Source-only upload.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Tue, 29 Nov 2022 10:02:18 +0000
+
+python-setuptools-gettext (0+git20221020.1.bf75db7-1) unstable; urgency=low
+
+  * Initial release. Closes: #1024450
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Tue, 01 Nov 2022 09:08:01 +0000

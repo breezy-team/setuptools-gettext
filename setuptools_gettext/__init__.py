@@ -20,13 +20,11 @@
 
 """build_mo command for setup.py."""
 
+import logging
 import os
 import re
-from distutils import log
-from distutils.core import Command
-from distutils.dep_util import newer
-from distutils.spawn import find_executable
-from distutils.util import convert_path, change_root
+import sys
+from setuptools import Command
 from typing import List, Optional
 
 from setuptools.dist import Distribution
@@ -107,16 +105,16 @@ class build_mo(Command):
             return
 
         if find_executable('msgfmt') is None:
-            log.warn("GNU gettext msgfmt utility not found!")
-            log.warn("Skip compiling po files.")
+            logging.warn("GNU gettext msgfmt utility not found!")
+            logging.warn("Skip compiling po files.")
             return
 
         if 'en' in self.lang:
             if find_executable('msginit') is None:
-                log.warn("GNU gettext msginit utility not found!")
-                log.warn("Skip creating English PO file.")
+                logging.warn("GNU gettext msginit utility not found!")
+                logging.warn("Skip creating English PO file.")
             else:
-                log.info('Creating English PO file...')
+                logging.info('Creating English PO file...')
                 pot = (self.prj_name or 'messages') + '.pot'
                 en_po = 'en.po'
                 self.spawn(['msginit',
@@ -138,7 +136,7 @@ class build_mo(Command):
             self.mkpath(dir_)
             mo = os.path.join(dir_, basename)
             if self.force or newer(po, mo):
-                log.info(f'Compile: {po} -> {mo}')
+                logging.info(f'Compile: {po} -> {mo}')
                 self.spawn(['msgfmt', '-o', mo, po])
                 self.outfiles.append(mo)
 
@@ -218,7 +216,7 @@ class install_mo(Command):
             if self.root is not None:
                 targetpath = change_root(self.root, targetpath)
             self.mkpath(targetpath)
-            (out, _) = self.copy_file(convert_path(filepath), targetpath)
+            (out, _) = self.copy_file(filepath, targetpath)
             self.outfiles.append(out)
 
     def get_inputs(self):
@@ -240,3 +238,52 @@ def pyprojecttoml_config(dist: Distribution) -> None:
     clean.sub_commands.append(('clean_mo', has_gettext))
     install = dist.get_command_class("install")
     install.sub_commands.append(('install_mo', has_gettext))
+
+
+def find_executable(executable):
+    _, ext = os.path.splitext(executable)
+    if sys.platform == 'win32' and ext != '.exe':
+        executable = executable + '.exe'
+
+    if os.path.isfile(executable):
+        return executable
+
+    path = os.environ.get('PATH', os.defpath)
+
+    # PATH='' doesn't match, whereas PATH=':' looks in the current directory
+    if not path:
+        return None
+
+    paths = path.split(os.pathsep)
+    for p in paths:
+        f = os.path.join(p, executable)
+        if os.path.isfile(f):
+            return f
+    return None
+
+
+def newer(source, target) -> bool:
+    if not os.path.exists(target):
+        return True
+
+    from stat import ST_MTIME
+
+    mtime1 = os.stat(source)[ST_MTIME]
+    mtime2 = os.stat(target)[ST_MTIME]
+
+    return mtime1 > mtime2
+
+
+def change_root(new_root, pathname):
+    if os.name == 'posix':
+        if not os.path.isabs(pathname):
+            return os.path.join(new_root, pathname)
+        else:
+            return os.path.join(new_root, pathname[1:])
+    elif os.name == 'nt':
+        (drive, path) = os.path.splitdrive(pathname)
+        if path[0] == '\\':
+            path = path[1:]
+        return os.path.join(new_root, path)
+    else:
+        raise AssertionError("Unsupported OS: %s" % os.name)
