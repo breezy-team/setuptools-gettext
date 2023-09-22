@@ -24,8 +24,7 @@ import logging
 import os
 import re
 import sys
-from distutils.core import Command
-from distutils.util import convert_path, change_root
+from setuptools import Command
 from typing import List, Optional
 
 from setuptools.dist import Distribution
@@ -217,7 +216,7 @@ class install_mo(Command):
             if self.root is not None:
                 targetpath = change_root(self.root, targetpath)
             self.mkpath(targetpath)
-            (out, _) = self.copy_file(convert_path(filepath), targetpath)
+            (out, _) = self.copy_file(filepath, targetpath)
             self.outfiles.append(out)
 
     def get_inputs(self):
@@ -273,3 +272,18 @@ def newer(source, target) -> bool:
     mtime2 = os.stat(target)[ST_MTIME]
 
     return mtime1 > mtime2
+
+
+def change_root(new_root, pathname):
+    if os.name == 'posix':
+        if not os.path.isabs(pathname):
+            return os.path.join(new_root, pathname)
+        else:
+            return os.path.join(new_root, pathname[1:])
+    elif os.name == 'nt':
+        (drive, path) = os.path.splitdrive(pathname)
+        if path[0] == '\\':
+            path = path[1:]
+        return os.path.join(new_root, path)
+    else:
+        raise AssertionError("Unsupported OS: %s" % os.name)
