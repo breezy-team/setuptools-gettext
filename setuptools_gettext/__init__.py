@@ -25,7 +25,6 @@ import os
 import re
 import sys
 from distutils.core import Command
-from distutils.dep_util import newer
 from distutils.util import convert_path, change_root
 from typing import List, Optional
 
@@ -262,3 +261,15 @@ def find_executable(executable):
         if os.path.isfile(f):
             return f
     return None
+
+
+def newer(source, target) -> bool:
+    if not os.path.exists(target):
+        return True
+
+    from stat import ST_MTIME
+
+    mtime1 = os.stat(source)[ST_MTIME]
+    mtime2 = os.stat(target)[ST_MTIME]
+
+    return mtime1 > mtime2
