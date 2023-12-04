@@ -255,7 +255,7 @@ class update_pot(Command):
             "--add-comments=i18n:",
             "-d", self.distribution.get_name(),
             "-p", self.distribution.gettext_source_dir,  # type: ignore
-            "-o", "{}.pot".format(self.distribution.get_name()),
+            "-o", f"{self.distribution.get_name()}.pot",
             ])
 
         input_files = []
@@ -265,7 +265,8 @@ class update_pot(Command):
                     input_files.append(os.path.join(root, file_))
         args.extend(input_files)
 
-        pot_path = os.path.join(self.distribution.gettext_source_dir, self.distribution.get_name())
+        pot_path = os.path.join(
+            self.distribution.gettext_source_dir, self.distribution.get_name())
         if os.path.exists(pot_path):
             args.append("--join")
         if self.distribution.get_contact():

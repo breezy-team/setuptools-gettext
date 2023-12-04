@@ -31,8 +31,8 @@ jobs:
         if: "matrix.os == 'ubuntu-latest'"
       - name: Style checks
         run: |
-          pip install -U flake8
-          python -m flake8
+          pip install -U ruff
+          python -m ruff check .
       - name: Typing checks
         run: |
           pip install -U mypy types-setuptools
