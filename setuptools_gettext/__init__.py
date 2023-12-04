@@ -266,7 +266,7 @@ class update_pot(Command):
         args.extend(input_files)
 
         pot_path = os.path.join(
-            self.distribution.gettext_source_dir, self.distribution.get_name())
+            self.distribution.gettext_source_dir, self.distribution.get_name())  # type: ignore
         if os.path.exists(pot_path):
             args.append("--join")
         if self.distribution.get_contact():
