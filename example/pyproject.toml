@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools", "setuptools-gettext"]
+
+[project]
+name = "hallowereld"
+version = "0.1.0"
+
+[tool.setuptools]
+packages = ["hallowereld"]
+
+[tool.setuptools-gettext]
+source_dir = "po"
+# Set the build directory, to make it easier to find the compiled catalogs
+# in the source tree.
+build_dir = "hallowereld/locale"
