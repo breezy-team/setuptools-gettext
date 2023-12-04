@@ -1,4 +1,4 @@
-from . import load_translations, hallo
+from . import hallo, load_translations
 
 load_translations()
 
