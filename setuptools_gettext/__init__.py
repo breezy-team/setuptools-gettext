@@ -242,6 +242,7 @@ class update_pot(Command):
         pass
 
     def run(self) -> None:
+        # TODO(jelmer): Support pygettext3 as well
         xgettext = find_executable('xgettext')
         if xgettext is None:
             logging.error("GNU gettext xgettext utility not found!")
