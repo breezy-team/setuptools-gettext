@@ -24,7 +24,7 @@ import logging
 import os
 import re
 import sys
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from setuptools import Command
 from setuptools.dist import Distribution
@@ -227,6 +227,52 @@ class install_mo(Command):
 
     def get_outputs(self):
         return self.outfiles
+
+
+class update_pot(Command):
+
+    description: str = "update the .pot file"
+
+    user_options: List[Tuple[str, str, str]] = []
+
+    def initialize_options(self) -> None:
+        pass
+
+    def finalize_options(self) -> None:
+        pass
+
+    def run(self) -> None:
+        # TODO(jelmer): Support pygettext3 as well
+        xgettext = find_executable('xgettext')
+        if xgettext is None:
+            logging.error("GNU gettext xgettext utility not found!")
+            return
+        args = [xgettext]
+        args.extend([
+            "--package-name", self.distribution.get_name(),
+            "--from-code", "UTF-8",
+            "--sort-by-file",
+            "--add-comments=i18n:",
+            "-d", self.distribution.get_name(),
+            "-p", self.distribution.gettext_source_dir,  # type: ignore
+            "-o", f"{self.distribution.get_name()}.pot",
+            ])
+
+        input_files = []
+        for root, _dirs, files in os.walk('.'):
+            for file_ in files:
+                if file_.endswith('.py'):
+                    input_files.append(os.path.join(root, file_))
+        args.extend(input_files)
+
+        pot_path = os.path.join(
+            self.distribution.gettext_source_dir, self.distribution.get_name())  # type: ignore
+        if os.path.exists(pot_path):
+            args.append("--join")
+        if self.distribution.get_contact():
+            args += ["--msgid-bugs-address", self.distribution.get_contact()]
+
+        self.spawn(args)
 
 
 def has_gettext(_c) -> bool:
