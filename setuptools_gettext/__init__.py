@@ -199,7 +199,7 @@ class install_mo(install_data):
             install_dir = os.path.dirname(
                 os.path.join("share/locale", langfile)
             )
-            self.data_files.append((install_dir, [filepath]))
+            self.data_files.append((install_dir, [filepath]))  # type: ignore
         super().run()
 
     def get_inputs(self):
@@ -254,8 +254,8 @@ class update_pot(Command):
         args.extend(input_files)
 
         pot_path = os.path.join(
-            self.distribution.gettext_source_dir, self.distribution.get_name()
-        )  # type: ignore
+            self.distribution.gettext_source_dir, self.distribution.get_name()  # type: ignore
+        )
         if os.path.exists(pot_path):
             args.append("--join")
         if self.distribution.get_contact():
