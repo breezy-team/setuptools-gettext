@@ -24,18 +24,19 @@ import logging
 import os
 import re
 import sys
+from distutils.command.install_data import install_data
 from typing import List, Optional, Tuple
 
 from setuptools import Command
 from setuptools.dist import Distribution
 
 __version__ = (0, 1, 8)
-DEFAULT_SOURCE_DIR = 'po'
-DEFAULT_BUILD_DIR = 'locale'
+DEFAULT_SOURCE_DIR = "po"
+DEFAULT_BUILD_DIR = "locale"
 
 
 def lang_from_dir(source_dir: os.PathLike) -> List[str]:
-    re_po = re.compile(r'^([a-zA-Z_]+)\.po$')
+    re_po = re.compile(r"^([a-zA-Z_]+)\.po$")
     lang = []
     for i in os.listdir(source_dir):
         mo = re_po.match(i)
@@ -45,26 +46,26 @@ def lang_from_dir(source_dir: os.PathLike) -> List[str]:
 
 
 def parse_lang(lang: str) -> List[str]:
-    return [i.strip() for i in lang.split(',') if i.strip()]
+    return [i.strip() for i in lang.split(",") if i.strip()]
 
 
 class build_mo(Command):
     """Subcommand of build command: build_mo."""
 
-    description = 'compile po files to mo files'
+    description = "compile po files to mo files"
 
     # List of options:
     #   - long name,
     #   - short name (None if no short name),
     #   - help string.
-    user_options = [('build-dir=', 'd', 'Directory to build locale files'),
-                    ('output-base=', 'o', 'mo-files base name'),
-                    ('force', 'f', 'Force creation of mo files'),
-                    ('lang=', None, 'Comma-separated list of languages '
-                                    'to process'),
-                    ]
+    user_options = [
+        ("build-dir=", "d", "Directory to build locale files"),
+        ("output-base=", "o", "mo-files base name"),
+        ("force", "f", "Force creation of mo files"),
+        ("lang=", None, "Comma-separated list of languages " "to process"),
+    ]
 
-    boolean_options = ['force']
+    boolean_options = ["force"]
 
     def initialize_options(self):
         self.build_dir = None
@@ -74,15 +75,16 @@ class build_mo(Command):
         self.outfiles = []
 
     def finalize_options(self):
-        self.set_undefined_options('build', ('force', 'force'))
+        self.set_undefined_options("build", ("force", "force"))
         self.prj_name = self.distribution.get_name()
         if not self.output_base:
-            self.output_base = self.prj_name or 'messages'
+            self.output_base = self.prj_name or "messages"
         self.source_dir = self.distribution.gettext_source_dir
         if self.build_dir is None:
             self.build_dir = (
-                getattr(self.distribution, 'gettext_build_dir', None)
-                or DEFAULT_BUILD_DIR)
+                getattr(self.distribution, "gettext_build_dir", None)
+                or DEFAULT_BUILD_DIR
+            )
         if self.lang is None:
             self.lang = lang_from_dir(self.source_dir)
         else:
@@ -91,9 +93,9 @@ class build_mo(Command):
     def get_inputs(self):
         inputs = []
         for lang in self.lang:
-            po = os.path.join(self.source_dir, lang + '.po')
+            po = os.path.join(self.source_dir, lang + ".po")
             if not os.path.isfile(po):
-                po = os.path.join(self.source_dir, lang + '.po')
+                po = os.path.join(self.source_dir, lang + ".po")
             inputs.append(po)
         return inputs
 
@@ -102,40 +104,46 @@ class build_mo(Command):
         if not self.lang:
             return
 
-        if find_executable('msgfmt') is None:
+        if find_executable("msgfmt") is None:
             logging.warn("GNU gettext msgfmt utility not found!")
             logging.warn("Skip compiling po files.")
             return
 
-        if 'en' in self.lang:
-            if find_executable('msginit') is None:
+        if "en" in self.lang:
+            if find_executable("msginit") is None:
                 logging.warn("GNU gettext msginit utility not found!")
                 logging.warn("Skip creating English PO file.")
             else:
-                logging.info('Creating English PO file...')
-                pot = (self.prj_name or 'messages') + '.pot'
-                en_po = 'en.po'
-                self.spawn(['msginit',
-                            '--no-translator',
-                            '-l', 'en',
-                            '-i', os.path.join(self.source_dir, pot),
-                            '-o', os.path.join(self.source_dir, en_po),
-                            ])
+                logging.info("Creating English PO file...")
+                pot = (self.prj_name or "messages") + ".pot"
+                en_po = "en.po"
+                self.spawn(
+                    [
+                        "msginit",
+                        "--no-translator",
+                        "-l",
+                        "en",
+                        "-i",
+                        os.path.join(self.source_dir, pot),
+                        "-o",
+                        os.path.join(self.source_dir, en_po),
+                    ]
+                )
 
         basename = self.output_base
-        if not basename.endswith('.mo'):
-            basename += '.mo'
+        if not basename.endswith(".mo"):
+            basename += ".mo"
 
         for lang in self.lang:
-            po = os.path.join(self.source_dir, lang + '.po')
+            po = os.path.join(self.source_dir, lang + ".po")
             if not os.path.isfile(po):
-                po = os.path.join(self.source_dir, lang + '.po')
-            dir_ = os.path.join(self.build_dir, lang, 'LC_MESSAGES')
+                po = os.path.join(self.source_dir, lang + ".po")
+            dir_ = os.path.join(self.build_dir, lang, "LC_MESSAGES")
             self.mkpath(dir_)
             mo = os.path.join(dir_, basename)
             if self.force or newer(po, mo):
-                logging.info(f'Compile: {po} -> {mo}')
-                self.spawn(['msgfmt', '-o', mo, po])
+                logging.info(f"Compile: {po} -> {mo}")
+                self.spawn(["msgfmt", "-o", mo, po])
                 self.outfiles.append(mo)
 
     def get_outputs(self):
@@ -143,9 +151,9 @@ class build_mo(Command):
 
 
 class clean_mo(Command):
-    description = 'clean .mo files'
+    description = "clean .mo files"
 
-    user_options = [('build-dir=', 'd', 'Directory to build locale files')]
+    user_options = [("build-dir=", "d", "Directory to build locale files")]
 
     def initialize_options(self):
         self.build_dir = None
@@ -153,75 +161,50 @@ class clean_mo(Command):
     def finalize_options(self):
         if self.build_dir is None:
             self.build_dir = (
-                getattr(self.distribution, 'gettext_build_dir', None)
-                or DEFAULT_BUILD_DIR)
+                getattr(self.distribution, "gettext_build_dir", None)
+                or DEFAULT_BUILD_DIR
+            )
 
     def run(self):
         if not os.path.isdir(self.build_dir):
             return
         for root, dirs, files in os.walk(self.build_dir):
             for file_ in files:
-                if file_.endswith('.mo'):
+                if file_.endswith(".mo"):
                     os.unlink(os.path.join(root, file_))
 
 
-class install_mo(Command):
-
+class install_mo(install_data):
     description: str = "install .mo files"
 
-    user_options = [
-        (
-            'install-dir=',
-            'd',
-            "base directory for installing data files "
-            "(default: installation base dir)",
-        ),
-        ('root=', None,
-         "install everything relative to this alternate root directory"),
-        ('force', 'f', "force installation (overwrite existing files)"),
-    ]
-
-    boolean_options: List[str] = ['force']
     build_dir: Optional[str]
-    install_dir: Optional[str]
-    root: Optional[str]
 
     def initialize_options(self) -> None:
-        self.install_dir = None
-        self.outfiles: List[str] = []
-        self.root = None
-        self.force = 0
+        super().initialize_options()
+        self.data_files: List[str] = []
         self.build_dir = None
 
     def finalize_options(self) -> None:
-        self.set_undefined_options(
-            'install',
-            ('install_data', 'install_dir'),
-            ('root', 'root'),
-            ('force', 'force'),
-        )
+        super().finalize_options()
         if self.build_dir is None:
-            self.build_dir = (
-                self.distribution.gettext_build_dir)  # type: ignore
+            self.build_dir = self.distribution.gettext_build_dir  # type: ignore
 
     def run(self) -> None:
         assert self.install_dir is not None
         assert self.build_dir is not None
-        self.mkpath(self.install_dir)
         import glob
+
         for filepath in glob.glob(self.build_dir + "/*/LC_MESSAGES/*.mo"):
-            langfile = filepath[len(self.build_dir.rstrip('/')+'/'):]
-            targetpath = os.path.join(
-                self.install_dir,
-                os.path.dirname(os.path.join("share/locale", langfile)))
-            if self.root is not None:
-                targetpath = change_root(self.root, targetpath)
-            self.mkpath(targetpath)
-            (out, _) = self.copy_file(filepath, targetpath)
-            self.outfiles.append(out)
+            langfile = filepath[len(self.build_dir.rstrip("/") + "/") :]
+            install_dir = os.path.dirname(
+                os.path.join("share/locale", langfile)
+            )
+            self.data_files.append((install_dir, [filepath]))  # type: ignore
+        super().run()
 
     def get_inputs(self):
         import glob
+
         return glob.glob(self.build_dir + "/*/LC_MESSAGES/*.mo")
 
     def get_outputs(self):
@@ -229,7 +212,6 @@ class install_mo(Command):
 
 
 class update_pot(Command):
-
     description: str = "update the .pot file"
 
     user_options: List[Tuple[str, str, str]] = []
@@ -242,30 +224,38 @@ class update_pot(Command):
 
     def run(self) -> None:
         # TODO(jelmer): Support pygettext3 as well
-        xgettext = find_executable('xgettext')
+        xgettext = find_executable("xgettext")
         if xgettext is None:
             logging.error("GNU gettext xgettext utility not found!")
             return
         args = [xgettext]
-        args.extend([
-            "--package-name", self.distribution.get_name(),
-            "--from-code", "UTF-8",
-            "--sort-by-file",
-            "--add-comments=i18n:",
-            "-d", self.distribution.get_name(),
-            "-p", self.distribution.gettext_source_dir,  # type: ignore
-            "-o", f"{self.distribution.get_name()}.pot",
-            ])
+        args.extend(
+            [
+                "--package-name",
+                self.distribution.get_name(),
+                "--from-code",
+                "UTF-8",
+                "--sort-by-file",
+                "--add-comments=i18n:",
+                "-d",
+                self.distribution.get_name(),
+                "-p",
+                self.distribution.gettext_source_dir,  # type: ignore
+                "-o",
+                f"{self.distribution.get_name()}.pot",
+            ]
+        )
 
         input_files = []
-        for root, _dirs, files in os.walk('.'):
+        for root, _dirs, files in os.walk("."):
             for file_ in files:
-                if file_.endswith('.py'):
+                if file_.endswith(".py"):
                     input_files.append(os.path.join(root, file_))
         args.extend(input_files)
 
         pot_path = os.path.join(
-            self.distribution.gettext_source_dir, self.distribution.get_name())  # type: ignore
+            self.distribution.gettext_source_dir, self.distribution.get_name()  # type: ignore
+        )
         if os.path.exists(pot_path):
             args.append("--join")
         if self.distribution.get_contact():
@@ -280,11 +270,11 @@ def has_gettext(_c) -> bool:
 
 def pyprojecttoml_config(dist: Distribution) -> None:
     build = dist.get_command_class("build")
-    build.sub_commands.append(('build_mo', has_gettext))
+    build.sub_commands.append(("build_mo", has_gettext))
     clean = dist.get_command_class("clean")
-    clean.sub_commands.append(('clean_mo', has_gettext))
+    clean.sub_commands.append(("clean_mo", has_gettext))
     install = dist.get_command_class("install")
-    install.sub_commands.append(('install_mo', has_gettext))
+    install.sub_commands.append(("install_mo", has_gettext))
 
     if sys.version_info[:2] >= (3, 11):
         from tomllib import load as toml_load
@@ -304,20 +294,22 @@ def pyprojecttoml_config(dist: Distribution) -> None:
 
 def load_pyproject_config(dist: Distribution, cfg) -> None:
     dist.gettext_source_dir = (  # type: ignore
-        cfg.get("source_dir") or DEFAULT_SOURCE_DIR)
+        cfg.get("source_dir") or DEFAULT_SOURCE_DIR
+    )
     dist.gettext_build_dir = (  # type: ignore
-        cfg.get("build_dir") or DEFAULT_BUILD_DIR)
+        cfg.get("build_dir") or DEFAULT_BUILD_DIR
+    )
 
 
 def find_executable(executable):
     _, ext = os.path.splitext(executable)
-    if sys.platform == 'win32' and ext != '.exe':
-        executable = executable + '.exe'
+    if sys.platform == "win32" and ext != ".exe":
+        executable = executable + ".exe"
 
     if os.path.isfile(executable):
         return executable
 
-    path = os.environ.get('PATH', os.defpath)
+    path = os.environ.get("PATH", os.defpath)
 
     # PATH='' doesn't match, whereas PATH=':' looks in the current directory
     if not path:
@@ -344,14 +336,14 @@ def newer(source, target) -> bool:
 
 
 def change_root(new_root, pathname):
-    if os.name == 'posix':
+    if os.name == "posix":
         if not os.path.isabs(pathname):
             return os.path.join(new_root, pathname)
         else:
             return os.path.join(new_root, pathname[1:])
-    elif os.name == 'nt':
+    elif os.name == "nt":
         (drive, path) = os.path.splitdrive(pathname)
-        if path[0] == '\\':
+        if path[0] == "\\":
             path = path[1:]
         return os.path.join(new_root, path)
     else:

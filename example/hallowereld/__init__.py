@@ -12,7 +12,7 @@ def load_translations():
     import gettext
     import os
 
-    if os.path.exists('setup.py'):
+    if os.path.exists("setup.py"):
         # We are running from source, so we need to install the translations
         locale_dir = os.path.join(os.path.dirname(__file__), "locale")
     else:
@@ -24,7 +24,13 @@ def load_translations():
         # in /usr/local
         locale_dir = os.path.join(
             os.path.dirname(__file__),
-            "..", "..", "..", "..", "share", "locale")
+            "..",
+            "..",
+            "..",
+            "..",
+            "share",
+            "locale",
+        )
     gettext.bindtextdomain("hallowereld", localedir=locale_dir)
     print("Loading translations from", locale_dir)
 
