@@ -110,7 +110,7 @@ class build_mo(Command):
             logging.warn("Skip compiling po files.")
             return
 
-        default_lang = self.gettext_default_language
+        default_lang = self.distribution.gettext_default_language
 
         if default_lang in self.lang:
             if find_executable("msginit") is None:
