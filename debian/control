@@ -3,7 +3,8 @@ Standards-Version: 4.6.1.0
 Build-Depends: debhelper-compat (= 13),
                dh-sequence-python3,
                python3-all,
-               python3-setuptools (>= 46.1)
+               python3-setuptools (>= 46.1),
+               python3-pytest
 Testsuite: autopkgtest-pkg-python
 Source: python-setuptools-gettext
 Homepage: https://github.com/breezy-team/setuptools-gettext
