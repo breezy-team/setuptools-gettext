@@ -1,8 +1,8 @@
 import os
+import tempfile
 
 from setuptools_gettext import lang_from_dir, parse_lang
 
-import tempfile
 
 def test_lang_from_dir():
     td = tempfile.mkdtemp()

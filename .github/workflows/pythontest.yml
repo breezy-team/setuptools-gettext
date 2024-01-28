@@ -38,3 +38,7 @@ jobs:
           pip install -U mypy types-setuptools
           python -m mypy setuptools_gettext
         if: "matrix.python-version != 'pypy3'"
+      - name: Unit tests
+        run: |
+          pip install -U pytest
+          python -m pytest tests/
