@@ -1,1 +1,4 @@
-setuptools>=46.1
+setuptools>=60.8
+
+[:python_version < "3.11"]
+tomli>=1.2.1
