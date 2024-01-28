@@ -21,7 +21,7 @@ classifiers = [
     "Operating System :: Microsoft :: Windows",
 ]
 requires-python = ">=3.7"
-dependencies = ["setuptools>=46.1"]
+dependencies = ["setuptools>=60.8", 'tomli>=1.2.1; python_version<"3.11"']
 dynamic = ["version"]
 
 [project.readme]
@@ -30,11 +30,13 @@ content-type = "text/markdown"
 
 [project.urls]
 Homepage = "https://github.com/breezy-team/setuptools-gettext"
+repository = "https://github.com/breezy-team/setuptools-gettext.git"
 
 [project.entry-points."distutils.commands"]
 build_mo = "setuptools_gettext:build_mo"
 clean_mo = "setuptools_gettext:clean_mo"
 install_mo = "setuptools_gettext:install_mo"
+update_pot = "setuptools_gettext:update_pot"
 
 [project.entry-points."setuptools.finalize_distribution_options"]
 setuptools_gettext = "setuptools_gettext:pyprojecttoml_config"
@@ -49,9 +51,6 @@ version = {attr = "setuptools_gettext.__version__"}
 
 [tool.mypy]
 ignore_missing_imports = true
-
-[tool.flake8]
-exclude = "build"
 
 [tool.ruff]
 select = [
