@@ -33,6 +33,7 @@ from setuptools.dist import Distribution
 __version__ = (0, 1, 8)
 DEFAULT_SOURCE_DIR = "po"
 DEFAULT_BUILD_DIR = "locale"
+DEFAULT_LANGUAGE = "en"
 
 
 def lang_from_dir(source_dir: os.PathLike) -> List[str]:
@@ -109,20 +110,22 @@ class build_mo(Command):
             logging.warn("Skip compiling po files.")
             return
 
-        if "en" in self.lang:
+        default_lang = self.gettext_default_language
+
+        if default_lang in self.lang:
             if find_executable("msginit") is None:
                 logging.warn("GNU gettext msginit utility not found!")
                 logging.warn("Skip creating English PO file.")
             else:
                 logging.info("Creating English PO file...")
                 pot = (self.prj_name or "messages") + ".pot"
-                en_po = "en.po"
+                en_po = default_lang + ".po"
                 self.spawn(
                     [
                         "msginit",
                         "--no-translator",
                         "-l",
-                        "en",
+                        default_lang,
                         "-i",
                         os.path.join(self.source_dir, pot),
                         "-o",
@@ -298,6 +301,9 @@ def load_pyproject_config(dist: Distribution, cfg) -> None:
     )
     dist.gettext_build_dir = (  # type: ignore
         cfg.get("build_dir") or DEFAULT_BUILD_DIR
+    )
+    dist.gettext_default_language = (  # type: ignore
+        cfg.get("default_language") or DEFAULT_LANGUAGE
     )
 
 
