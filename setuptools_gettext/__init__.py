@@ -24,15 +24,16 @@ import logging
 import os
 import re
 import sys
-from distutils.command.install_data import install_data
+from distutils.util import convert_path
 from typing import List, Optional, Tuple
 
 from setuptools import Command
 from setuptools.dist import Distribution
 
-__version__ = (0, 1, 9)
+__version__ = (0, 1, 10)
 DEFAULT_SOURCE_DIR = "po"
 DEFAULT_BUILD_DIR = "locale"
+DEFAULT_LANGUAGE = "en"
 
 
 def lang_from_dir(source_dir: os.PathLike) -> List[str]:
@@ -109,20 +110,22 @@ class build_mo(Command):
             logging.warn("Skip compiling po files.")
             return
 
-        if "en" in self.lang:
+        default_lang = self.gettext_default_language
+
+        if default_lang in self.lang:
             if find_executable("msginit") is None:
                 logging.warn("GNU gettext msginit utility not found!")
                 logging.warn("Skip creating English PO file.")
             else:
                 logging.info("Creating English PO file...")
                 pot = (self.prj_name or "messages") + ".pot"
-                en_po = "en.po"
+                en_po = default_lang + ".po"
                 self.spawn(
                     [
                         "msginit",
                         "--no-translator",
                         "-l",
-                        "en",
+                        default_lang,
                         "-i",
                         os.path.join(self.source_dir, pot),
                         "-o",
@@ -174,38 +177,71 @@ class clean_mo(Command):
                     os.unlink(os.path.join(root, file_))
 
 
-class install_mo(install_data):
+def gather_built_files(build_dir) -> List[str]:
+    import glob
+
+    return glob.glob(build_dir + "/*/LC_MESSAGES/*.mo")
+
+
+class install_mo(Command):
     description: str = "install .mo files"
+
+    user_options = [
+        ('install-dir=', 'd',
+         "base directory for installing data files "
+         "(default: installation base dir)"),
+        ('root=', None,
+         "install everything relative to this alternate root directory"),
+        ('force', 'f', "force installation (overwrite existing files)"),
+        ]
+
+    boolean_options = ['force']
 
     build_dir: Optional[str]
 
     def initialize_options(self) -> None:
-        super().initialize_options()
         self.data_files: List[str] = []
         self.build_dir = None
+        self.install_dir = None
+        self.outfiles: List[str] = []
+        self.root = None
+        self.force = 0
 
     def finalize_options(self) -> None:
-        super().finalize_options()
         if self.build_dir is None:
             self.build_dir = self.distribution.gettext_build_dir  # type: ignore
+        self.set_undefined_options('install',
+                                   ('install_data', 'install_dir'),
+                                   ('root', 'root'),
+                                   ('force', 'force'),
+                                  )
+
 
     def run(self) -> None:
         assert self.install_dir is not None
+        self.mkpath(self.install_dir)
         assert self.build_dir is not None
-        import glob
-
-        for filepath in glob.glob(self.build_dir + "/*/LC_MESSAGES/*.mo"):
+        for filepath in gather_built_files(self.build_dir):
             langfile = filepath[len(self.build_dir.rstrip("/") + "/") :]
             install_dir = os.path.dirname(
                 os.path.join("share/locale", langfile)
             )
-            self.data_files.append((install_dir, [filepath]))  # type: ignore
-        super().run()
+
+            # it's a tuple with path to install to and a list of files
+            dir = convert_path(install_dir)
+            if not os.path.isabs(dir):
+                dir = os.path.join(self.install_dir, dir)
+            elif self.root:
+                dir = change_root(self.root, dir)
+            self.mkpath(dir)
+
+            # Copy files, adding them to the list of output files.
+            data = convert_path(filepath)
+            (out, _) = self.copy_file(data, dir)
+            self.outfiles.append(out)
 
     def get_inputs(self):
-        import glob
-
-        return glob.glob(self.build_dir + "/*/LC_MESSAGES/*.mo")
+        return gather_built_files(self.build_dir)
 
     def get_outputs(self):
         return self.outfiles
@@ -298,6 +334,9 @@ def load_pyproject_config(dist: Distribution, cfg) -> None:
     )
     dist.gettext_build_dir = (  # type: ignore
         cfg.get("build_dir") or DEFAULT_BUILD_DIR
+    )
+    dist.gettext_default_language = (  # type: ignore
+        cfg.get("default_language") or DEFAULT_LANGUAGE
     )
 
 
