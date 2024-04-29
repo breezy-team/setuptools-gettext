@@ -106,16 +106,16 @@ class build_mo(Command):
             return
 
         if find_executable("msgfmt") is None:
-            logging.warn("GNU gettext msgfmt utility not found!")
-            logging.warn("Skip compiling po files.")
+            logging.warning("GNU gettext msgfmt utility not found!")
+            logging.warning("Skip compiling po files.")
             return
 
         default_lang = self.distribution.gettext_default_language
 
         if default_lang in self.lang:
             if find_executable("msginit") is None:
-                logging.warn("GNU gettext msginit utility not found!")
-                logging.warn("Skip creating English PO file.")
+                logging.warning("GNU gettext msginit utility not found!")
+                logging.warning("Skip creating English PO file.")
             else:
                 logging.info("Creating English PO file...")
                 pot = (self.prj_name or "messages") + ".pot"
