@@ -41,6 +41,11 @@ update_pot = "setuptools_gettext:update_pot"
 [project.entry-points."setuptools.finalize_distribution_options"]
 setuptools_gettext = "setuptools_gettext:pyprojecttoml_config"
 
+[project.optional-dependencies]
+dev = [
+    "ruff==0.4.3"
+]
+
 [tool.setuptools]
 packages = ["setuptools_gettext"]
 zip-safe = true
@@ -53,6 +58,10 @@ version = {attr = "setuptools_gettext.__version__"}
 ignore_missing_imports = true
 
 [tool.ruff]
+target-version = "py37"
+line-length = 79
+
+[tool.ruff.lint]
 select = [
     "ANN",
     "D",
@@ -61,8 +70,6 @@ select = [
     "I",
     "UP",
 ]
-target-version = "py37"
-line-length = 79
 ignore = [
     "ANN001",
     "ANN101",
@@ -73,5 +80,5 @@ ignore = [
     "D103",
 ]
 
-[tool.ruff.pydocstyle]
+[tool.ruff.lint.pydocstyle]
 convention = "google"

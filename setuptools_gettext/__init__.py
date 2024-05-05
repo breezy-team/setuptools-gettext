@@ -386,4 +386,4 @@ def change_root(new_root, pathname):
             path = path[1:]
         return os.path.join(new_root, path)
     else:
-        raise AssertionError("Unsupported OS: %s" % os.name)
+        raise AssertionError(f"Unsupported OS: {os.name}")
