@@ -31,7 +31,7 @@ jobs:
         if: "matrix.os == 'ubuntu-latest'"
       - name: Style checks
         run: |
-          pip install -U ruff
+          pip install -U ".[dev]"
           python -m ruff check .
       - name: Typing checks
         run: |
