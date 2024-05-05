@@ -1,6 +1,7 @@
 import os
 import shutil
 import tempfile
+from unittest import SkipTest
 
 from setuptools import Distribution
 
@@ -55,6 +56,9 @@ def test_example_install():
 
 
 def test_update_pot():
+    # Skip this test if xgettext is not available
+    if shutil.which("xgettext") is None:
+        raise SkipTest("xgettext not available")
     td = tempfile.mkdtemp()
     shutil.copytree("example", td + "/example")
     p = os.path.join(td, 'example', 'hallowereld', 'example.py')
