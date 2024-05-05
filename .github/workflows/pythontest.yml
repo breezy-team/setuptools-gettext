@@ -29,6 +29,10 @@ jobs:
         run: |
           sudo apt install gettext
         if: "matrix.os == 'ubuntu-latest'"
+      - name: Install dependencies (Windows)
+        run: |
+          vcpkg install gettext
+        if: "matrix.os == 'windows-latest'"
       - name: Style checks
         run: |
           pip install -U ruff
