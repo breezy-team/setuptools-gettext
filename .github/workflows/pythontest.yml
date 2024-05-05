@@ -31,7 +31,8 @@ jobs:
         if: "matrix.os == 'ubuntu-latest'"
       - name: Install dependencies (Windows)
         run: |
-          vcpkg install gettext
+          vcpkg install gettext-libintl
+          ls C:/vcpkg/packages/gettext-libintl_x64-windows/tools/gettext-libintl/bin
         if: "matrix.os == 'windows-latest'"
       - name: Style checks
         run: |
