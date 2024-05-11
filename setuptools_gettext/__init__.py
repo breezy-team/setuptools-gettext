@@ -24,7 +24,6 @@ import logging
 import os
 import re
 import sys
-from distutils.util import convert_path
 from typing import List, Optional, Tuple
 
 from setuptools import Command
@@ -48,6 +47,34 @@ def lang_from_dir(source_dir: os.PathLike) -> List[str]:
 
 def parse_lang(lang: str) -> List[str]:
     return [i.strip() for i in lang.split(",") if i.strip()]
+
+
+# Imported from distutils.util in Python 3.11:
+def convert_path(pathname):
+    """Return 'pathname' as a name that will work on the native filesystem.
+
+    i.e. split it on '/' and put it back together again using the current
+    directory separator.  Needed because filenames in the setup script are
+    always supplied in Unix style, and have to be converted to the local
+    convention before we can actually use them in the filesystem.  Raises
+    ValueError on non-Unix-ish systems if 'pathname' either starts or
+    ends with a slash.
+    """
+    if os.sep == '/':
+        return pathname
+    if not pathname:
+        return pathname
+    if pathname[0] == '/':
+        raise ValueError(f"path '{pathname}' cannot be absolute")
+    if pathname[-1] == '/':
+        raise ValueError(f"path '{pathname}' cannot end with '/'")
+
+    paths = pathname.split('/')
+    while '.' in paths:
+        paths.remove('.')
+    if not paths:
+        return os.curdir
+    return os.path.join(*paths)
 
 
 class build_mo(Command):

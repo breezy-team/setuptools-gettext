@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "setuptools-gettext"
 maintainers = [{name = "Breezy Developers", email = "breezy-core@googlegroups.com"}]
 description = "Setuptools gettext extension plugin"
-keywords = ["distutils", "setuptools", "gettext"]
+keywords = ["setuptools", "gettext"]
 classifiers = [
     "Topic :: Software Development :: Version Control",
     "License :: OSI Approved :: GNU General Public License v2 or later (GPLv2+)",
