@@ -29,7 +29,7 @@ from typing import List, Optional, Tuple
 from setuptools import Command
 from setuptools.dist import Distribution
 
-__version__ = (0, 1, 13)
+__version__ = (0, 1, 14)
 DEFAULT_SOURCE_DIR = "po"
 DEFAULT_BUILD_DIR = "locale"
 DEFAULT_LANGUAGE = "en"
