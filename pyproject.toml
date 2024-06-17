@@ -44,7 +44,7 @@ setuptools_gettext = "setuptools_gettext:pyprojecttoml_config"
 
 [project.optional-dependencies]
 dev = [
-    "ruff==0.4.8"
+    "ruff==0.4.9"
 ]
 
 [tool.setuptools]
