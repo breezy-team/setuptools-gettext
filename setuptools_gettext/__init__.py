@@ -327,8 +327,8 @@ class update_pot(Command):
         self.spawn(args)
 
 
-def has_gettext(_c) -> bool:
-    return os.path.isdir(DEFAULT_SOURCE_DIR)
+def has_gettext(command) -> bool:
+    return os.path.isdir(command.distribution.gettext_source_dir)
 
 
 def pyprojecttoml_config(dist: Distribution) -> None:
