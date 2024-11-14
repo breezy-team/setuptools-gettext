@@ -21,7 +21,7 @@ classifiers = [
     "Operating System :: MacOS :: MacOS X",
     "Operating System :: Microsoft :: Windows",
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = ["setuptools>=60.8", 'tomli>=1.2.1; python_version<"3.11"']
 dynamic = ["version"]
 
