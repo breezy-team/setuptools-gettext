@@ -15,7 +15,7 @@ def test_lang_from_dir():
     with open(os.path.join(podir, 'de_DE.po'), 'w') as f:
         f.write('foo')
 
-    assert set(lang_from_dir(podir)) == set(['de', 'de_DE', 'fr'])
+    assert set(lang_from_dir(podir)) == {'de', 'de_DE', 'fr'}
 
 
 def test_parse_lang():
@@ -35,8 +35,8 @@ def test_gather_built_files():
         f.write('foo')
     with open(os.path.join(de_lc_messages_dir, 'app2.mo'), 'w') as f:
         f.write('foo')
-    assert set(gather_built_files(builddir)) == set([
+    assert set(gather_built_files(builddir)) == {
         os.path.join(de_lc_messages_dir, 'app.mo'),
         os.path.join(de_lc_messages_dir, 'app2.mo'),
-    ])
+    }
 
