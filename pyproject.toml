@@ -43,7 +43,7 @@ setuptools_gettext = "setuptools_gettext:pyprojecttoml_config"
 
 [project.optional-dependencies]
 dev = [
-    "ruff==0.8.6"
+    "ruff==0.9.1"
 ]
 
 [tool.setuptools]
@@ -72,7 +72,6 @@ select = [
 ]
 ignore = [
     "ANN001",
-    "ANN101",
     "ANN201",
     "D100",
     "D101",

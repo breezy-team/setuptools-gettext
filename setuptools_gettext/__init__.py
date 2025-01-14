@@ -60,18 +60,18 @@ def convert_path(pathname):
     ValueError on non-Unix-ish systems if 'pathname' either starts or
     ends with a slash.
     """
-    if os.sep == '/':
+    if os.sep == "/":
         return pathname
     if not pathname:
         return pathname
-    if pathname[0] == '/':
+    if pathname[0] == "/":
         raise ValueError(f"path '{pathname}' cannot be absolute")
-    if pathname[-1] == '/':
+    if pathname[-1] == "/":
         raise ValueError(f"path '{pathname}' cannot end with '/'")
 
-    paths = pathname.split('/')
-    while '.' in paths:
-        paths.remove('.')
+    paths = pathname.split("/")
+    while "." in paths:
+        paths.remove(".")
     if not paths:
         return os.curdir
     return os.path.join(*paths)
@@ -90,7 +90,7 @@ class build_mo(Command):
         ("build-dir=", "d", "Directory to build locale files"),
         ("output-base=", "o", "mo-files base name"),
         ("force", "f", "Force creation of mo files"),
-        ("lang=", None, "Comma-separated list of languages " "to process"),
+        ("lang=", None, "Comma-separated list of languages to process"),
     ]
 
     boolean_options = ["force"]
@@ -214,15 +214,21 @@ class install_mo(Command):
     description: str = "install .mo files"
 
     user_options = [
-        ('install-dir=', 'd',
-         "base directory for installing data files "
-         "(default: installation base dir)"),
-        ('root=', None,
-         "install everything relative to this alternate root directory"),
-        ('force', 'f', "force installation (overwrite existing files)"),
-        ]
+        (
+            "install-dir=",
+            "d",
+            "base directory for installing data files "
+            "(default: installation base dir)",
+        ),
+        (
+            "root=",
+            None,
+            "install everything relative to this alternate root directory",
+        ),
+        ("force", "f", "force installation (overwrite existing files)"),
+    ]
 
-    boolean_options = ['force']
+    boolean_options = ["force"]
 
     build_dir: Optional[str]
 
@@ -237,12 +243,12 @@ class install_mo(Command):
     def finalize_options(self) -> None:
         if self.build_dir is None:
             self.build_dir = self.distribution.gettext_build_dir  # type: ignore
-        self.set_undefined_options('install',
-                                   ('install_data', 'install_dir'),
-                                   ('root', 'root'),
-                                   ('force', 'force'),
-                                  )
-
+        self.set_undefined_options(
+            "install",
+            ("install_data", "install_dir"),
+            ("root", "root"),
+            ("force", "force"),
+        )
 
     def run(self) -> None:
         assert self.install_dir is not None
@@ -317,7 +323,8 @@ class update_pot(Command):
         args.extend(input_files)
 
         pot_path = os.path.join(
-            self.distribution.gettext_source_dir, self.distribution.get_name()  # type: ignore
+            self.distribution.gettext_source_dir,
+            self.distribution.get_name(),  # type: ignore
         )
         if os.path.exists(pot_path):
             args.append("--join")
