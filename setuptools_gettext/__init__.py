@@ -107,7 +107,7 @@ class build_mo(Command):
         self.prj_name = self.distribution.get_name()
         if not self.output_base:
             self.output_base = self.prj_name or "messages"
-        self.source_dir = self.distribution.gettext_source_dir
+        self.source_dir = self.distribution.gettext_source_dir  # type: ignore
         if self.build_dir is None:
             self.build_dir = (
                 getattr(self.distribution, "gettext_build_dir", None)
@@ -283,7 +283,7 @@ class install_mo(Command):
 class update_pot(Command):
     description: str = "update the .pot file"
 
-    user_options: List[Tuple[str, str, str]] = []
+    user_options: List[Tuple[str, str, str]] = []  # type: ignore
 
     def initialize_options(self) -> None:
         pass
@@ -323,7 +323,7 @@ class update_pot(Command):
         args.extend(input_files)
 
         pot_path = os.path.join(
-            self.distribution.gettext_source_dir,
+            self.distribution.gettext_source_dir,  # type: ignore
             self.distribution.get_name(),  # type: ignore
         )
         if os.path.exists(pot_path):

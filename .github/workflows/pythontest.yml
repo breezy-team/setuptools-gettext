@@ -39,7 +39,7 @@ jobs:
         python -m ruff check .
     - name: Typing checks
       run: |
-        pip install -U mypy types-setuptools
+        pip install -U types-setuptools
         python -m mypy setuptools_gettext
       if: "matrix.python-version != 'pypy3'"
     - name: Unit tests
