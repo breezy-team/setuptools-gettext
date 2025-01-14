@@ -61,20 +61,22 @@ def test_update_pot():
         raise SkipTest("xgettext not available")
     td = tempfile.mkdtemp()
     shutil.copytree("example", td + "/example")
-    p = os.path.join(td, 'example', 'hallowereld', 'example.py')
-    with open(p, 'w') as f:
-        f.write("# Use the \"_\" shorthand for gettext\n")
+    p = os.path.join(td, "example", "hallowereld", "example.py")
+    with open(p, "w") as f:
+        f.write('# Use the "_" shorthand for gettext\n')
         f.write("from gettext import gettext as _\n")
         f.write('print(_("Hello Example"))')
 
-    dist = Distribution(attrs={
-        "name": "hallowereld",
-    })
+    dist = Distribution(
+        attrs={
+            "name": "hallowereld",
+        }
+    )
 
     load_pyproject_config(dist, {})
 
     old_cwd = os.getcwd()
-    os.chdir(os.path.join(td, 'example'))
+    os.chdir(os.path.join(td, "example"))
     try:
         cmd = update_pot(dist)
         cmd.initialize_options()
@@ -82,5 +84,5 @@ def test_update_pot():
         cmd.run()
     finally:
         os.chdir(old_cwd)
-    with open(os.path.join(td, 'example', 'po', 'hallowereld.pot')) as f:
-        assert 'Hello Example' in f.read()
+    with open(os.path.join(td, "example", "po", "hallowereld.pot")) as f:
+        assert "Hello Example" in f.read()
