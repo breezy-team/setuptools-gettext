@@ -43,7 +43,7 @@ setuptools_gettext = "setuptools_gettext:pyprojecttoml_config"
 
 [project.optional-dependencies]
 dev = [
-    "ruff==0.9.1",
+    "ruff==0.9.2",
     "mypy==1.14.1"
 ]
 
