@@ -28,6 +28,7 @@ from typing import List, Optional, Tuple
 
 from setuptools import Command
 from setuptools.dist import Distribution
+from setuptools.modified import newer
 
 __version__ = (0, 1, 14)
 DEFAULT_SOURCE_DIR = "po"
@@ -394,18 +395,6 @@ def find_executable(executable):
         if os.path.isfile(f):
             return f
     return None
-
-
-def newer(source, target) -> bool:
-    if not os.path.exists(target):
-        return True
-
-    from stat import ST_MTIME
-
-    mtime1 = os.stat(source)[ST_MTIME]
-    mtime2 = os.stat(target)[ST_MTIME]
-
-    return mtime1 > mtime2
 
 
 def change_root(new_root, pathname):
