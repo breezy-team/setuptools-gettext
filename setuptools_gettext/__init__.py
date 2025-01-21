@@ -29,6 +29,7 @@ from typing import List, Optional, Tuple
 from setuptools import Command
 from setuptools.dist import Distribution
 from setuptools.modified import newer
+from translate.tools.pocompile import convertmo
 
 __version__ = (0, 1, 14)
 DEFAULT_SOURCE_DIR = "po"
@@ -91,6 +92,7 @@ class build_mo(Command):
         ("build-dir=", "d", "Directory to build locale files"),
         ("output-base=", "o", "mo-files base name"),
         ("force", "f", "Force creation of mo files"),
+        ("msgfmt", "m", "Use msgfmt program"),
         ("lang=", None, "Comma-separated list of languages to process"),
     ]
 
@@ -100,6 +102,7 @@ class build_mo(Command):
         self.build_dir = None
         self.output_base = None
         self.force = None
+        self.msgfmt = None
         self.lang = None
         self.outfiles = []
 
@@ -133,7 +136,7 @@ class build_mo(Command):
         if not self.lang:
             return
 
-        if find_executable("msgfmt") is None:
+        if self.msgfmt and find_executable("msgfmt") is None:
             logging.warning("GNU gettext msgfmt utility not found!")
             logging.warning("Skip compiling po files.")
             return
@@ -174,8 +177,15 @@ class build_mo(Command):
             mo = os.path.join(dir_, basename)
             if self.force or newer(po, mo):
                 logging.info(f"Compile: {po} -> {mo}")
-                self.spawn(["msgfmt", "-o", mo, po])
+                self.compile_mo(po, mo)
                 self.outfiles.append(mo)
+
+    def compile_mo(self, po: str, mo: str):
+        if self.msgfmt:
+            self.spawn(["msgfmt", "-o", mo, po])
+        else:
+            with open(po, "rb") as pofile, open(mo, "wb") as mofile:
+                convertmo(pofile, mofile, None)
 
     def get_outputs(self):
         return self.outfiles
