@@ -1,21 +1,21 @@
 import os
-import tempfile
+from tempfile import TemporaryDirectory
 
 from setuptools_gettext import gather_built_files, lang_from_dir, parse_lang
 
 
 def test_lang_from_dir():
-    td = tempfile.mkdtemp()
-    podir = os.path.join(td, "po")
-    os.mkdir(podir)
-    with open(os.path.join(podir, "de.po"), "w") as f:
-        f.write("foo")
-    with open(os.path.join(podir, "fr.po"), "w") as f:
-        f.write("foo")
-    with open(os.path.join(podir, "de_DE.po"), "w") as f:
-        f.write("foo")
+    with TemporaryDirectory() as td:
+        podir = os.path.join(td, "po")
+        os.mkdir(podir)
+        with open(os.path.join(podir, "de.po"), "w") as f:
+            f.write("foo")
+        with open(os.path.join(podir, "fr.po"), "w") as f:
+            f.write("foo")
+        with open(os.path.join(podir, "de_DE.po"), "w") as f:
+            f.write("foo")
 
-    assert set(lang_from_dir(podir)) == {"de", "de_DE", "fr"}
+        assert set(lang_from_dir(podir)) == {"de", "de_DE", "fr"}
 
 
 def test_parse_lang():
@@ -24,18 +24,18 @@ def test_parse_lang():
 
 
 def test_gather_built_files():
-    td = tempfile.mkdtemp()
-    builddir = os.path.join(td, "po")
-    os.mkdir(builddir)
-    dedir = os.path.join(builddir, "de")
-    os.mkdir(dedir)
-    de_lc_messages_dir = os.path.join(dedir, "LC_MESSAGES")
-    os.mkdir(de_lc_messages_dir)
-    with open(os.path.join(de_lc_messages_dir, "app.mo"), "w") as f:
-        f.write("foo")
-    with open(os.path.join(de_lc_messages_dir, "app2.mo"), "w") as f:
-        f.write("foo")
-    assert set(gather_built_files(builddir)) == {
-        os.path.join(de_lc_messages_dir, "app.mo"),
-        os.path.join(de_lc_messages_dir, "app2.mo"),
-    }
+    with TemporaryDirectory() as td:
+        builddir = os.path.join(td, "po")
+        os.mkdir(builddir)
+        dedir = os.path.join(builddir, "de")
+        os.mkdir(dedir)
+        de_lc_messages_dir = os.path.join(dedir, "LC_MESSAGES")
+        os.mkdir(de_lc_messages_dir)
+        with open(os.path.join(de_lc_messages_dir, "app.mo"), "w") as f:
+            f.write("foo")
+        with open(os.path.join(de_lc_messages_dir, "app2.mo"), "w") as f:
+            f.write("foo")
+        assert set(gather_built_files(builddir)) == {
+            os.path.join(de_lc_messages_dir, "app.mo"),
+            os.path.join(de_lc_messages_dir, "app2.mo"),
+        }
