@@ -25,3 +25,18 @@ source_dir = "po"
 # directory in which the generated .mo files are placed when building
 build_dir = "breezy/locale"
 ```
+
+## Compilation tool
+
+By default, either ``msgfmt`` or the `translate-toolkit` package is used to
+compile the .po files into .mo files - whichever is available.
+
+The ``--msgfmt`` option can be used to force the use of ``msgfmt``, and the
+``--translate-toolkit`` option can be used to force the use of the
+translate-toolkit.
+
+At the moment, ``msgfmt`` is preferred. In the future, the translate-toolkit
+will become the default.
+
+You can use the ``translate-toolkit`` extra to install the translate-toolkit
+package.

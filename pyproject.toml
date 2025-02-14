@@ -21,7 +21,10 @@ classifiers = [
     "Operating System :: Microsoft :: Windows",
 ]
 requires-python = ">=3.9"
-dependencies = ["setuptools>=61.0", 'tomli>=1.2.1; python_version<"3.11"']
+dependencies = [
+    "setuptools>=61.0",
+    'tomli>=1.2.1; python_version<"3.11"',
+]
 dynamic = ["version"]
 
 [project.readme]
@@ -45,6 +48,9 @@ setuptools_gettext = "setuptools_gettext:pyprojecttoml_config"
 dev = [
     "ruff==0.9.5",
     "mypy==1.15.0"
+]
+translate-toolkit = [
+    "translate-toolkit>=3.14.0"
 ]
 
 [tool.setuptools]
