@@ -29,12 +29,23 @@ from typing import List, Optional, Tuple
 from setuptools import Command
 from setuptools.dist import Distribution
 from setuptools.modified import newer
-from translate.tools.pocompile import convertmo
 
 __version__ = (0, 1, 14)
 DEFAULT_SOURCE_DIR = "po"
 DEFAULT_BUILD_DIR = "locale"
 DEFAULT_LANGUAGE = "en"
+
+
+def has_translate_toolkit() -> bool:
+    try:
+        import translate  # noqa
+    except ImportError:
+        return False
+    return True
+
+
+def has_msgfmt() -> bool:
+    return find_executable("msgfmt") is not None
 
 
 def lang_from_dir(source_dir: os.PathLike) -> List[str]:
@@ -92,6 +103,7 @@ class build_mo(Command):
         ("build-dir=", "d", "Directory to build locale files"),
         ("output-base=", "o", "mo-files base name"),
         ("force", "f", "Force creation of mo files"),
+        ("translate-toolkit", "t", "Use translate-toolkit"),
         ("msgfmt", "m", "Use msgfmt program"),
         ("lang=", None, "Comma-separated list of languages to process"),
     ]
@@ -103,6 +115,7 @@ class build_mo(Command):
         self.output_base = None
         self.force = None
         self.msgfmt = None
+        self.translate_toolkit = None
         self.lang = None
         self.outfiles = []
 
@@ -136,8 +149,25 @@ class build_mo(Command):
         if not self.lang:
             return
 
-        if self.msgfmt and find_executable("msgfmt") is None:
+        if self.msgfmt and self.translate_toolkit:
+            logging.error("Cannot use both msgfmt and translate-toolkit!")
+            return
+        elif not self.msgfmt and not self.translate_toolkit:
+            if has_msgfmt():
+                self.msgfmt = True
+            elif has_translate_toolkit():
+                self.translate_toolkit = True
+            else:
+                logging.warning("No gettext tools found!")
+                return
+
+        if self.msgfmt and not has_msgfmt():
             logging.warning("GNU gettext msgfmt utility not found!")
+            logging.warning("Skip compiling po files.")
+            return
+
+        if self.translate_toolkit and not has_translate_toolkit():
+            logging.warning("Translate toolkit not found!")
             logging.warning("Skip compiling po files.")
             return
 
@@ -183,9 +213,12 @@ class build_mo(Command):
     def compile_mo(self, po: str, mo: str):
         if self.msgfmt:
             self.spawn(["msgfmt", "-o", mo, po])
-        else:
+        elif self.translate_toolkit:
+            from translate.tools.pocompile import convertmo
             with open(po, "rb") as pofile, open(mo, "wb") as mofile:
                 convertmo(pofile, mofile, None)
+        else:
+            raise AssertionError("No gettext tools found!")
 
     def get_outputs(self):
         return self.outfiles
