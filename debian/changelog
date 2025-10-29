@@ -1,3 +1,10 @@
+python-setuptools-gettext (0.1.16-1) UNRELEASED; urgency=medium
+
+  * New upstream release.
+   + Removes use of pkg-resources. Closes: #1083706
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Wed, 29 Oct 2025 17:42:34 +0000
+
 python-setuptools-gettext (0.1.10-2) unstable; urgency=medium
 
   * Add patch fix-default-language, fixing traceback.

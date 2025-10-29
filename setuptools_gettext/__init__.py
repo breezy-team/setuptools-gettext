@@ -24,16 +24,28 @@ import logging
 import os
 import re
 import sys
-from distutils.util import convert_path
 from typing import List, Optional, Tuple
 
 from setuptools import Command
 from setuptools.dist import Distribution
+from setuptools.modified import newer
 
-__version__ = (0, 1, 10)
+__version__ = (0, 1, 16)
 DEFAULT_SOURCE_DIR = "po"
 DEFAULT_BUILD_DIR = "locale"
 DEFAULT_LANGUAGE = "en"
+
+
+def has_translate_toolkit() -> bool:
+    try:
+        import translate  # noqa
+    except ImportError:
+        return False
+    return True
+
+
+def has_msgfmt() -> bool:
+    return find_executable("msgfmt") is not None
 
 
 def lang_from_dir(source_dir: os.PathLike) -> List[str]:
@@ -50,6 +62,34 @@ def parse_lang(lang: str) -> List[str]:
     return [i.strip() for i in lang.split(",") if i.strip()]
 
 
+# Imported from distutils.util in Python 3.11:
+def convert_path(pathname):
+    """Return 'pathname' as a name that will work on the native filesystem.
+
+    i.e. split it on '/' and put it back together again using the current
+    directory separator.  Needed because filenames in the setup script are
+    always supplied in Unix style, and have to be converted to the local
+    convention before we can actually use them in the filesystem.  Raises
+    ValueError on non-Unix-ish systems if 'pathname' either starts or
+    ends with a slash.
+    """
+    if os.sep == "/":
+        return pathname
+    if not pathname:
+        return pathname
+    if pathname[0] == "/":
+        raise ValueError(f"path '{pathname}' cannot be absolute")
+    if pathname[-1] == "/":
+        raise ValueError(f"path '{pathname}' cannot end with '/'")
+
+    paths = pathname.split("/")
+    while "." in paths:
+        paths.remove(".")
+    if not paths:
+        return os.curdir
+    return os.path.join(*paths)
+
+
 class build_mo(Command):
     """Subcommand of build command: build_mo."""
 
@@ -63,7 +103,9 @@ class build_mo(Command):
         ("build-dir=", "d", "Directory to build locale files"),
         ("output-base=", "o", "mo-files base name"),
         ("force", "f", "Force creation of mo files"),
-        ("lang=", None, "Comma-separated list of languages " "to process"),
+        ("translate-toolkit", "t", "Use translate-toolkit"),
+        ("msgfmt", "m", "Use msgfmt program"),
+        ("lang=", None, "Comma-separated list of languages to process"),
     ]
 
     boolean_options = ["force"]
@@ -72,6 +114,8 @@ class build_mo(Command):
         self.build_dir = None
         self.output_base = None
         self.force = None
+        self.msgfmt = None
+        self.translate_toolkit = None
         self.lang = None
         self.outfiles = []
 
@@ -80,7 +124,7 @@ class build_mo(Command):
         self.prj_name = self.distribution.get_name()
         if not self.output_base:
             self.output_base = self.prj_name or "messages"
-        self.source_dir = self.distribution.gettext_source_dir
+        self.source_dir = self.distribution.gettext_source_dir  # type: ignore
         if self.build_dir is None:
             self.build_dir = (
                 getattr(self.distribution, "gettext_build_dir", None)
@@ -105,17 +149,34 @@ class build_mo(Command):
         if not self.lang:
             return
 
-        if find_executable("msgfmt") is None:
-            logging.warn("GNU gettext msgfmt utility not found!")
-            logging.warn("Skip compiling po files.")
+        if self.msgfmt and self.translate_toolkit:
+            logging.error("Cannot use both msgfmt and translate-toolkit!")
+            return
+        elif not self.msgfmt and not self.translate_toolkit:
+            if has_msgfmt():
+                self.msgfmt = True
+            elif has_translate_toolkit():
+                self.translate_toolkit = True
+            else:
+                logging.warning("No gettext tools found!")
+                return
+
+        if self.msgfmt and not has_msgfmt():
+            logging.warning("GNU gettext msgfmt utility not found!")
+            logging.warning("Skip compiling po files.")
             return
 
-        default_lang = self.gettext_default_language
+        if self.translate_toolkit and not has_translate_toolkit():
+            logging.warning("Translate toolkit not found!")
+            logging.warning("Skip compiling po files.")
+            return
+
+        default_lang = self.distribution.gettext_default_language
 
         if default_lang in self.lang:
             if find_executable("msginit") is None:
-                logging.warn("GNU gettext msginit utility not found!")
-                logging.warn("Skip creating English PO file.")
+                logging.warning("GNU gettext msginit utility not found!")
+                logging.warning("Skip creating English PO file.")
             else:
                 logging.info("Creating English PO file...")
                 pot = (self.prj_name or "messages") + ".pot"
@@ -146,8 +207,18 @@ class build_mo(Command):
             mo = os.path.join(dir_, basename)
             if self.force or newer(po, mo):
                 logging.info(f"Compile: {po} -> {mo}")
-                self.spawn(["msgfmt", "-o", mo, po])
+                self.compile_mo(po, mo)
                 self.outfiles.append(mo)
+
+    def compile_mo(self, po: str, mo: str):
+        if self.msgfmt:
+            self.spawn(["msgfmt", "-o", mo, po])
+        elif self.translate_toolkit:
+            from translate.tools.pocompile import convertmo
+            with open(po, "rb") as pofile, open(mo, "wb") as mofile:
+                convertmo(pofile, mofile, None)
+        else:
+            raise AssertionError("No gettext tools found!")
 
     def get_outputs(self):
         return self.outfiles
@@ -187,15 +258,21 @@ class install_mo(Command):
     description: str = "install .mo files"
 
     user_options = [
-        ('install-dir=', 'd',
-         "base directory for installing data files "
-         "(default: installation base dir)"),
-        ('root=', None,
-         "install everything relative to this alternate root directory"),
-        ('force', 'f', "force installation (overwrite existing files)"),
-        ]
+        (
+            "install-dir=",
+            "d",
+            "base directory for installing data files "
+            "(default: installation base dir)",
+        ),
+        (
+            "root=",
+            None,
+            "install everything relative to this alternate root directory",
+        ),
+        ("force", "f", "force installation (overwrite existing files)"),
+    ]
 
-    boolean_options = ['force']
+    boolean_options = ["force"]
 
     build_dir: Optional[str]
 
@@ -210,12 +287,12 @@ class install_mo(Command):
     def finalize_options(self) -> None:
         if self.build_dir is None:
             self.build_dir = self.distribution.gettext_build_dir  # type: ignore
-        self.set_undefined_options('install',
-                                   ('install_data', 'install_dir'),
-                                   ('root', 'root'),
-                                   ('force', 'force'),
-                                  )
-
+        self.set_undefined_options(
+            "install",
+            ("install_data", "install_dir"),
+            ("root", "root"),
+            ("force", "force"),
+        )
 
     def run(self) -> None:
         assert self.install_dir is not None
@@ -250,7 +327,7 @@ class install_mo(Command):
 class update_pot(Command):
     description: str = "update the .pot file"
 
-    user_options: List[Tuple[str, str, str]] = []
+    user_options: List[Tuple[str, str, str]] = []  # type: ignore
 
     def initialize_options(self) -> None:
         pass
@@ -290,7 +367,8 @@ class update_pot(Command):
         args.extend(input_files)
 
         pot_path = os.path.join(
-            self.distribution.gettext_source_dir, self.distribution.get_name()  # type: ignore
+            self.distribution.gettext_source_dir,  # type: ignore
+            self.distribution.get_name(),  # type: ignore
         )
         if os.path.exists(pot_path):
             args.append("--join")
@@ -300,8 +378,8 @@ class update_pot(Command):
         self.spawn(args)
 
 
-def has_gettext(_c) -> bool:
-    return os.path.isdir(DEFAULT_SOURCE_DIR)
+def has_gettext(command) -> bool:
+    return os.path.isdir(command.distribution.gettext_source_dir)
 
 
 def pyprojecttoml_config(dist: Distribution) -> None:
@@ -362,18 +440,6 @@ def find_executable(executable):
     return None
 
 
-def newer(source, target) -> bool:
-    if not os.path.exists(target):
-        return True
-
-    from stat import ST_MTIME
-
-    mtime1 = os.stat(source)[ST_MTIME]
-    mtime2 = os.stat(target)[ST_MTIME]
-
-    return mtime1 > mtime2
-
-
 def change_root(new_root, pathname):
     if os.name == "posix":
         if not os.path.isabs(pathname):
@@ -386,4 +452,4 @@ def change_root(new_root, pathname):
             path = path[1:]
         return os.path.join(new_root, path)
     else:
-        raise AssertionError("Unsupported OS: %s" % os.name)
+        raise AssertionError(f"Unsupported OS: {os.name}")

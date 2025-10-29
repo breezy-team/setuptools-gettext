@@ -6,22 +6,26 @@ build-backend = "setuptools.build_meta"
 name = "setuptools-gettext"
 maintainers = [{name = "Breezy Developers", email = "breezy-core@googlegroups.com"}]
 description = "Setuptools gettext extension plugin"
-keywords = ["distutils", "setuptools", "gettext"]
+keywords = ["setuptools", "gettext"]
 classifiers = [
     "Topic :: Software Development :: Version Control",
     "License :: OSI Approved :: GNU General Public License v2 or later (GPLv2+)",
     "Intended Audience :: Developers",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.9",
     "Operating System :: POSIX",
     "Operating System :: MacOS :: MacOS X",
     "Operating System :: Microsoft :: Windows",
 ]
-requires-python = ">=3.7"
-dependencies = ["setuptools>=60.8", 'tomli>=1.2.1; python_version<"3.11"']
+requires-python = ">=3.9"
+dependencies = [
+    "setuptools>=61.0",
+    'tomli>=1.2.1; python_version<"3.11"',
+]
 dynamic = ["version"]
 
 [project.readme]
@@ -41,6 +45,15 @@ update_pot = "setuptools_gettext:update_pot"
 [project.entry-points."setuptools.finalize_distribution_options"]
 setuptools_gettext = "setuptools_gettext:pyprojecttoml_config"
 
+[project.optional-dependencies]
+dev = [
+    "ruff==0.14.2",
+    "mypy==1.18.2"
+]
+translate-toolkit = [
+    "translate-toolkit>=3.14.0"
+]
+
 [tool.setuptools]
 packages = ["setuptools_gettext"]
 zip-safe = true
@@ -53,6 +66,10 @@ version = {attr = "setuptools_gettext.__version__"}
 ignore_missing_imports = true
 
 [tool.ruff]
+target-version = "py38"
+line-length = 79
+
+[tool.ruff.lint]
 select = [
     "ANN",
     "D",
@@ -61,11 +78,8 @@ select = [
     "I",
     "UP",
 ]
-target-version = "py37"
-line-length = 79
 ignore = [
     "ANN001",
-    "ANN101",
     "ANN201",
     "D100",
     "D101",
@@ -73,5 +87,5 @@ ignore = [
     "D103",
 ]
 
-[tool.ruff.pydocstyle]
+[tool.ruff.lint.pydocstyle]
 convention = "google"
