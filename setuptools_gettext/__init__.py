@@ -30,7 +30,7 @@ from setuptools import Command
 from setuptools.dist import Distribution
 from setuptools.modified import newer
 
-__version__ = (0, 1, 14)
+__version__ = (0, 1, 16)
 DEFAULT_SOURCE_DIR = "po"
 DEFAULT_BUILD_DIR = "locale"
 DEFAULT_LANGUAGE = "en"
