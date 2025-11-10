@@ -215,6 +215,7 @@ class build_mo(Command):
             self.spawn(["msgfmt", "-o", mo, po])
         elif self.translate_toolkit:
             from translate.tools.pocompile import convertmo
+
             with open(po, "rb") as pofile, open(mo, "wb") as mofile:
                 convertmo(pofile, mofile, None)
         else:
@@ -336,12 +337,21 @@ class update_pot(Command):
         pass
 
     def run(self) -> None:
-        # TODO(jelmer): Support pygettext3 as well
         xgettext = find_executable("xgettext")
-        if xgettext is None:
-            logging.error("GNU gettext xgettext utility not found!")
+        pygettext = find_executable("pygettext") or find_executable(
+            "pygettext.py"
+        )
+
+        if xgettext is None and pygettext is None:
+            logging.error("Neither xgettext nor pygettext found!")
             return
-        args = [xgettext]
+
+        if xgettext is not None:
+            tool = xgettext
+        else:
+            tool = pygettext
+
+        args = [tool]
         args.extend(
             [
                 "--package-name",
