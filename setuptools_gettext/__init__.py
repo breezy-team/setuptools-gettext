@@ -215,6 +215,7 @@ class build_mo(Command):
             self.spawn(["msgfmt", "-o", mo, po])
         elif self.translate_toolkit:
             from translate.tools.pocompile import convertmo
+
             with open(po, "rb") as pofile, open(mo, "wb") as mofile:
                 convertmo(pofile, mofile, None)
         else:
