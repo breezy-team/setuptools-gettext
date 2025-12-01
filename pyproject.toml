@@ -48,7 +48,7 @@ setuptools_gettext = "setuptools_gettext:pyprojecttoml_config"
 [project.optional-dependencies]
 dev = [
     "ruff==0.14.6",
-    "mypy==1.18.2"
+    "mypy==1.19.0"
 ]
 translate-toolkit = [
     "translate-toolkit>=3.14.0"
