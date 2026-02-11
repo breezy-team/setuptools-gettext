@@ -1,2 +1,3 @@
-version=4
-https://pypi.debian.net/setuptools-gettext/setuptools-gettext-(.+)\.(?:zip|tgz|tbz|txz|(?:tar\.(?:gz|bz2|xz)))
+Version: 5
+
+Source: https://pypi.debian.net/setuptools-gettext/setuptools-gettext-(.+)\.(?:zip|tgz|tbz|txz|(?:tar\.(?:gz|bz2|xz)))
