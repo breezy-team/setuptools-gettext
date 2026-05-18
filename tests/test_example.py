@@ -7,6 +7,7 @@ from setuptools import Distribution
 
 from setuptools_gettext import (
     build_mo,
+    find_source_files,
     install_mo,
     load_pyproject_config,
     update_pot,
@@ -52,6 +53,20 @@ def test_example_install():
             cmd.run()
         finally:
             os.chdir(old_cwd)
+
+
+def test_find_source_files_example():
+    found = find_source_files("example")
+    rel = sorted(os.path.relpath(p, "example") for p in found)
+    assert rel == [
+        os.path.join("po", "hallowereld.pot"),
+        os.path.join("po", "nl.po"),
+    ]
+
+
+def test_find_source_files_missing_dir():
+    with TemporaryDirectory() as td:
+        assert find_source_files(td) == []
 
 
 def test_update_pot():
