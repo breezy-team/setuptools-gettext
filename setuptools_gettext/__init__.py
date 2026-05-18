@@ -383,6 +383,18 @@ def has_gettext(command) -> bool:
     return os.path.isdir(command.distribution.gettext_source_dir)
 
 
+def _load_pyproject_toml(path: str = "pyproject.toml") -> dict:
+    if sys.version_info[:2] >= (3, 11):
+        from tomllib import load as toml_load
+    else:
+        from tomli import load as toml_load
+    try:
+        with open(path, "rb") as f:
+            return toml_load(f).get("tool", {}).get("setuptools-gettext") or {}
+    except FileNotFoundError:
+        return {}
+
+
 def pyprojecttoml_config(dist: Distribution) -> None:
     build = dist.get_command_class("build")
     build.sub_commands.append(("build_mo", has_gettext))
@@ -391,20 +403,7 @@ def pyprojecttoml_config(dist: Distribution) -> None:
     install = dist.get_command_class("install")
     install.sub_commands.append(("install_mo", has_gettext))
 
-    if sys.version_info[:2] >= (3, 11):
-        from tomllib import load as toml_load
-    else:
-        from tomli import load as toml_load
-    try:
-        with open("pyproject.toml", "rb") as f:
-            cfg = toml_load(f).get("tool", {}).get("setuptools-gettext")
-    except FileNotFoundError:
-        load_pyproject_config(dist, {})
-    else:
-        if cfg:
-            load_pyproject_config(dist, cfg)
-        else:
-            load_pyproject_config(dist, {})
+    load_pyproject_config(dist, _load_pyproject_toml())
 
 
 def load_pyproject_config(dist: Distribution, cfg) -> None:
@@ -417,6 +416,34 @@ def load_pyproject_config(dist: Distribution, cfg) -> None:
     dist.gettext_default_language = (  # type: ignore
         cfg.get("default_language") or DEFAULT_LANGUAGE
     )
+
+
+def find_source_files(dirname: str = "") -> List[str]:
+    """Find .po/.pot source files for inclusion in the sdist.
+
+    Registered as a ``setuptools.file_finders`` entry point so that
+    ``python -m build --sdist`` ships the gettext source files.
+    """
+    pyproject = (
+        os.path.join(dirname, "pyproject.toml")
+        if dirname
+        else "pyproject.toml"
+    )
+    cfg = _load_pyproject_toml(pyproject)
+    source_dir = cfg.get("source_dir") or DEFAULT_SOURCE_DIR
+
+    source_dir_path = (
+        os.path.join(dirname, source_dir) if dirname else source_dir
+    )
+    if not os.path.isdir(source_dir_path):
+        return []
+
+    found = []
+    for root, _dirs, files in os.walk(source_dir_path):
+        for name in files:
+            if name.endswith((".po", ".pot")):
+                found.append(os.path.join(root, name))
+    return found
 
 
 def find_executable(executable):
