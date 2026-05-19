@@ -61,6 +61,7 @@ def test_load_pyproject_config_default_compiler():
     load_pyproject_config(dist, {})
 
     assert getattr(dist, "gettext_compiler") == "auto"
+    assert getattr(dist, "gettext_install_layout") == "share"
 
 
 @pytest.mark.parametrize("compiler", ["auto", "msgfmt", "translate-toolkit"])
@@ -77,6 +78,22 @@ def test_load_pyproject_config_rejects_invalid_compiler():
 
     with pytest.raises(ValueError, match="Unsupported setuptools-gettext"):
         load_pyproject_config(dist, {"compiler": "invalid"})
+
+
+@pytest.mark.parametrize("install_layout", ["share", "package"])
+def test_load_pyproject_config_install_layout(install_layout):
+    dist = Distribution()
+
+    load_pyproject_config(dist, {"install_layout": install_layout})
+
+    assert getattr(dist, "gettext_install_layout") == install_layout
+
+
+def test_load_pyproject_config_rejects_invalid_install_layout():
+    dist = Distribution()
+
+    with pytest.raises(ValueError, match="Unsupported setuptools-gettext"):
+        load_pyproject_config(dist, {"install_layout": "invalid"})
 
 
 def test_build_mo_uses_msgfmt_compiler_from_config():

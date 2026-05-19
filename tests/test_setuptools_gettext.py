@@ -1,18 +1,22 @@
 import os
 from tempfile import TemporaryDirectory
+from typing import NoReturn
 
 import pytest
 from setuptools import Distribution
 from setuptools.errors import OptionError
 
 import setuptools_gettext
+import setuptools_gettext.install_layout
 from setuptools_gettext import (
     build_mo,
     discover_catalogs,
     find_source_files,
     gather_built_files,
+    install_mo,
     load_pyproject_config,
     parse_lang,
+    pyprojecttoml_config,
 )
 from setuptools_gettext.catalog import lang_from_dir
 
@@ -190,6 +194,213 @@ def test_build_mixed_layouts_without_output_collision(monkeypatch):
                 os.path.join(build_dir, "de", "LC_MESSAGES", "django.mo"),
             ),
         }
+
+
+def test_package_layout_build_py_copies_generated_mo(monkeypatch):
+    with TemporaryDirectory() as td:
+        app_dir = os.path.join(td, "myapp")
+        write_file(os.path.join(app_dir, "__init__.py"))
+        locale = os.path.join(app_dir, "locale")
+        po = os.path.join(locale, "de", "LC_MESSAGES", "django.po")
+        write_file(po)
+        dist = Distribution(
+            attrs={
+                "name": "demo",
+                "packages": ["myapp"],
+                "package_dir": {"myapp": app_dir},
+            }
+        )
+        dist.script_name = "setup.py"
+        load_pyproject_config(
+            dist,
+            {
+                "source_dir": locale,
+                "build_dir": locale,
+                "install_layout": "package",
+            },
+        )
+        old_cwd = os.getcwd()
+        os.chdir(td)
+        try:
+            cmd = build_mo(dist)
+            cmd.initialize_options()
+            cmd.finalize_options()
+            compiled = run_build(cmd, monkeypatch)
+
+            build_py = dist.get_command_obj("build_py")
+            build_py.ensure_finalized()
+            build_py.build_lib = os.path.join(td, "build")
+            build_py.run()
+        finally:
+            os.chdir(old_cwd)
+
+        mo = os.path.join(locale, "de", "LC_MESSAGES", "django.mo")
+        assert compiled == [(po, mo)]
+        assert os.path.exists(
+            os.path.join(
+                td,
+                "build",
+                "myapp",
+                "locale",
+                "de",
+                "LC_MESSAGES",
+                "django.mo",
+            )
+        )
+
+
+def test_install_mo_share_layout_keeps_legacy_destination():
+    with TemporaryDirectory() as td:
+        build_dir = os.path.join(td, "build")
+        mo = os.path.join(build_dir, "de", "LC_MESSAGES", "django.mo")
+        write_file(mo)
+        install_dir = os.path.join(td, "install")
+        dist = Distribution(attrs={"name": "demo"})
+        load_pyproject_config(dist, {"build_dir": build_dir})
+        cmd = install_mo(dist)
+        cmd.initialize_options()
+        cmd.install_dir = install_dir
+        cmd.finalize_options()
+
+        cmd.run()
+
+        installed = os.path.join(
+            install_dir,
+            "share",
+            "locale",
+            "de",
+            "LC_MESSAGES",
+            "django.mo",
+        )
+        assert cmd.get_outputs() == [installed]
+        assert os.path.exists(installed)
+
+
+def test_install_mo_package_layout_installs_inside_package():
+    with TemporaryDirectory() as td:
+        app_dir = os.path.join(td, "myapp")
+        write_file(os.path.join(app_dir, "__init__.py"))
+        build_dir = os.path.join(app_dir, "locale")
+        mo = os.path.join(build_dir, "de", "LC_MESSAGES", "django.mo")
+        write_file(mo)
+        install_dir = os.path.join(td, "install")
+        dist = Distribution(
+            attrs={
+                "name": "demo",
+                "packages": ["myapp"],
+                "package_dir": {"myapp": app_dir},
+            }
+        )
+        load_pyproject_config(
+            dist, {"build_dir": build_dir, "install_layout": "package"}
+        )
+        cmd = install_mo(dist)
+        cmd.initialize_options()
+        cmd.install_dir = install_dir
+        cmd.finalize_options()
+
+        cmd.run()
+
+        installed = os.path.join(
+            install_dir,
+            "myapp",
+            "locale",
+            "de",
+            "LC_MESSAGES",
+            "django.mo",
+        )
+        assert cmd.get_outputs() == [installed]
+        assert os.path.exists(installed)
+
+
+def test_install_mo_package_layout_installs_src_layout_package():
+    with TemporaryDirectory() as td:
+        app_dir = os.path.join(td, "src", "myapp")
+        write_file(os.path.join(app_dir, "__init__.py"))
+        build_dir = os.path.join(app_dir, "locale")
+        write_file(os.path.join(build_dir, "de", "LC_MESSAGES", "django.mo"))
+        install_dir = os.path.join(td, "install")
+        dist = Distribution(
+            attrs={
+                "name": "demo",
+                "packages": ["myapp"],
+                "package_dir": {"": os.path.join(td, "src")},
+            }
+        )
+        load_pyproject_config(
+            dist, {"build_dir": build_dir, "install_layout": "package"}
+        )
+        cmd = install_mo(dist)
+        cmd.initialize_options()
+        cmd.install_dir = install_dir
+        cmd.finalize_options()
+
+        cmd.run()
+
+        assert cmd.get_outputs() == [
+            os.path.join(
+                install_dir,
+                "myapp",
+                "locale",
+                "de",
+                "LC_MESSAGES",
+                "django.mo",
+            )
+        ]
+
+
+def test_package_layout_rejects_build_dir_outside_packages():
+    with TemporaryDirectory() as td:
+        build_dir = os.path.join(td, "locale")
+        write_file(os.path.join(build_dir, "de", "LC_MESSAGES", "django.mo"))
+        dist = Distribution(attrs={"name": "demo", "packages": ["myapp"]})
+        load_pyproject_config(
+            dist, {"build_dir": build_dir, "install_layout": "package"}
+        )
+        cmd = install_mo(dist)
+        cmd.initialize_options()
+        cmd.install_dir = os.path.join(td, "install")
+
+        with pytest.raises(OptionError, match="inside a configured package"):
+            cmd.finalize_options()
+
+
+def test_package_layout_rejects_build_dir_on_different_mount(monkeypatch):
+    with TemporaryDirectory() as td:
+        build_dir = os.path.join(td, "locale")
+        write_file(os.path.join(build_dir, "de", "LC_MESSAGES", "django.mo"))
+        dist = Distribution(attrs={"name": "demo", "packages": ["myapp"]})
+        load_pyproject_config(
+            dist, {"build_dir": build_dir, "install_layout": "package"}
+        )
+
+        def raise_value_error(_path, _parent) -> NoReturn:
+            raise ValueError("path is on mount 'c:', start on mount 'd:'")
+
+        monkeypatch.setattr(
+            setuptools_gettext.install_layout.os.path,
+            "relpath",
+            raise_value_error,
+        )
+        cmd = install_mo(dist)
+        cmd.initialize_options()
+        cmd.install_dir = os.path.join(td, "install")
+
+        with pytest.raises(OptionError, match="inside a configured package"):
+            cmd.finalize_options()
+
+
+def test_pyproject_config_registers_build_mo_before_build_py():
+    dist = Distribution()
+
+    pyprojecttoml_config(dist)
+
+    sub_commands = [
+        sub_command[0]
+        for sub_command in dist.get_command_class("build").sub_commands
+    ]
+    assert sub_commands.count("build_mo") == 1
+    assert sub_commands.index("build_mo") < sub_commands.index("build_py")
 
 
 def test_duplicate_output_paths_are_rejected():
