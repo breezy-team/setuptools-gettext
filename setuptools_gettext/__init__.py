@@ -22,13 +22,22 @@
 
 import logging
 import os
-import re
 import sys
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from setuptools import Command
 from setuptools.dist import Distribution
+from setuptools.errors import OptionError
 from setuptools.modified import newer
+
+from .catalog import (
+    LC_MESSAGES,
+    Catalog,
+    discover_catalogs,
+    has_standard_catalogs,
+    mo_basename,
+    parse_lang,
+)
 
 __version__ = (0, 1, 17)
 DEFAULT_SOURCE_DIR = "po"
@@ -50,18 +59,27 @@ def has_msgfmt() -> bool:
     return find_executable("msgfmt") is not None
 
 
-def lang_from_dir(source_dir: os.PathLike) -> List[str]:
-    re_po = re.compile(r"^([a-zA-Z_]+)\.po$")
-    lang = []
-    for i in os.listdir(source_dir):
-        mo = re_po.match(i)
-        if mo:
-            lang.append(mo.group(1))
-    return lang
+def _detect_default_source_dir(dirname: str = "") -> str:
+    po_dir = os.path.join(dirname, DEFAULT_SOURCE_DIR)
+    if os.path.isdir(po_dir):
+        return DEFAULT_SOURCE_DIR
+
+    locale_dir = os.path.join(dirname, DEFAULT_BUILD_DIR)
+    if os.path.isdir(locale_dir) and has_standard_catalogs(locale_dir):
+        return DEFAULT_BUILD_DIR
+
+    return DEFAULT_SOURCE_DIR
 
 
-def parse_lang(lang: str) -> List[str]:
-    return [i.strip() for i in lang.split(",") if i.strip()]
+def _resolve_source_dir(dist: Distribution) -> str:
+    if getattr(dist, "gettext_source_dir_configured", False):
+        return dist.gettext_source_dir  # type: ignore
+
+    source_dir = dist.gettext_source_dir  # type: ignore
+    if source_dir == DEFAULT_SOURCE_DIR and not os.path.isdir(source_dir):
+        source_dir = _detect_default_source_dir()
+        dist.gettext_source_dir = source_dir  # type: ignore
+    return source_dir
 
 
 # Imported from distutils.util in Python 3.11:
@@ -115,18 +133,21 @@ class build_mo(Command):
     def initialize_options(self):
         self.build_dir = None
         self.output_base = None
+        self.output_base_explicit = False
         self.force = None
         self.msgfmt = None
         self.translate_toolkit = None
         self.lang = None
+        self.catalogs = []
         self.outfiles = []
 
     def finalize_options(self):
         self.set_undefined_options("build", ("force", "force"))
         self.prj_name = self.distribution.get_name()
+        self.output_base_explicit = bool(self.output_base)
         if not self.output_base:
             self.output_base = self.prj_name or "messages"
-        self.source_dir = self.distribution.gettext_source_dir  # type: ignore
+        self.source_dir = _resolve_source_dir(self.distribution)
         if self.build_dir is None:
             self.build_dir = (
                 getattr(self.distribution, "gettext_build_dir", None)
@@ -141,22 +162,44 @@ class build_mo(Command):
             elif compiler == "translate-toolkit":
                 self.translate_toolkit = True
         if self.lang is None:
-            self.lang = lang_from_dir(self.source_dir)
+            self.catalogs = discover_catalogs(self.source_dir)
         else:
-            self.lang = parse_lang(self.lang)
+            self.catalogs = discover_catalogs(
+                self.source_dir, parse_lang(self.lang)
+            )
+        self.lang = sorted({catalog.lang for catalog in self.catalogs})
+        self._check_duplicate_outputs()
 
     def get_inputs(self):
-        inputs = []
-        for lang in self.lang:
-            po = os.path.join(self.source_dir, lang + ".po")
-            if not os.path.isfile(po):
-                po = os.path.join(self.source_dir, lang + ".po")
-            inputs.append(po)
-        return inputs
+        return [catalog.po for catalog in self.catalogs]
+
+    def _mo_path(self, catalog: Catalog) -> str:
+        domain = catalog.domain
+        if catalog.uses_output_base or self.output_base_explicit:
+            assert self.output_base is not None
+            domain = self.output_base
+        assert self.build_dir is not None
+        return os.path.join(
+            self.build_dir,
+            catalog.lang,
+            LC_MESSAGES,
+            mo_basename(domain),
+        )
+
+    def _check_duplicate_outputs(self) -> None:
+        targets: Dict[str, str] = {}
+        for catalog in self.catalogs:
+            mo = self._mo_path(catalog)
+            if mo in targets:
+                raise OptionError(
+                    "Multiple gettext catalogs would compile to "
+                    f"{mo}: {targets[mo]} and {catalog.po}"
+                )
+            targets[mo] = catalog.po
 
     def run(self):
         """Run msgfmt for each language."""
-        if not self.lang:
+        if not self.catalogs:
             return
 
         if self.msgfmt and self.translate_toolkit:
@@ -183,7 +226,10 @@ class build_mo(Command):
 
         default_lang = self.distribution.gettext_default_language
 
-        if default_lang in self.lang:
+        if any(
+            catalog.lang == default_lang and catalog.uses_output_base
+            for catalog in self.catalogs
+        ):
             if find_executable("msginit") is None:
                 logging.warning("GNU gettext msginit utility not found!")
                 logging.warning("Skip creating English PO file.")
@@ -204,20 +250,13 @@ class build_mo(Command):
                     ]
                 )
 
-        basename = self.output_base
-        if not basename.endswith(".mo"):
-            basename += ".mo"
-
-        for lang in self.lang:
-            po = os.path.join(self.source_dir, lang + ".po")
-            if not os.path.isfile(po):
-                po = os.path.join(self.source_dir, lang + ".po")
-            dir_ = os.path.join(self.build_dir, lang, "LC_MESSAGES")
+        for catalog in self.catalogs:
+            dir_ = os.path.join(self.build_dir, catalog.lang, LC_MESSAGES)
             self.mkpath(dir_)
-            mo = os.path.join(dir_, basename)
-            if self.force or newer(po, mo):
-                logging.info(f"Compile: {po} -> {mo}")
-                self.compile_mo(po, mo)
+            mo = self._mo_path(catalog)
+            if self.force or newer(catalog.po, mo):
+                logging.info(f"Compile: {catalog.po} -> {mo}")
+                self.compile_mo(catalog.po, mo)
                 self.outfiles.append(mo)
 
     def compile_mo(self, po: str, mo: str):
@@ -390,7 +429,8 @@ class update_pot(Command):
 
 
 def has_gettext(command) -> bool:
-    return os.path.isdir(command.distribution.gettext_source_dir)
+    source_dir = _resolve_source_dir(command.distribution)
+    return os.path.isdir(source_dir)
 
 
 def _load_pyproject_toml(path: str = "pyproject.toml") -> dict:
@@ -417,8 +457,9 @@ def pyprojecttoml_config(dist: Distribution) -> None:
 
 
 def load_pyproject_config(dist: Distribution, cfg) -> None:
+    dist.gettext_source_dir_configured = bool(cfg.get("source_dir"))  # type: ignore
     dist.gettext_source_dir = (  # type: ignore
-        cfg.get("source_dir") or DEFAULT_SOURCE_DIR
+        cfg.get("source_dir") or _detect_default_source_dir()
     )
     dist.gettext_build_dir = (  # type: ignore
         cfg.get("build_dir") or DEFAULT_BUILD_DIR
@@ -460,7 +501,7 @@ def find_source_files(dirname: str = "") -> List[str]:
         else "pyproject.toml"
     )
     cfg = _load_pyproject_toml(pyproject)
-    source_dir = cfg.get("source_dir") or DEFAULT_SOURCE_DIR
+    source_dir = cfg.get("source_dir") or _detect_default_source_dir(dirname)
 
     source_dir_path = (
         os.path.join(dirname, source_dir) if dirname else source_dir

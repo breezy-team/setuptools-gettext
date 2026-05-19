@@ -8,7 +8,10 @@ setup.py as well as hooking those into standard commands.
 ## Usage
 
 By default, setuptools_gettext compiles and installs mo files when there is a
-`po` directory present that contains ``.po`` files.
+`po` directory present that contains ``.po`` files. It also supports the
+standard gettext layout with ``locale/*/LC_MESSAGES/*.po`` files. If ``po`` is
+absent and a top-level ``locale`` directory contains standard gettext catalogs,
+that directory is used automatically.
 
 The .mo files are installed adjacent to your package as package data in a subdirectory called ``locale``.
 
@@ -27,6 +30,20 @@ build_dir = "breezy/locale"
 # compiler to use: "auto", "msgfmt", or "translate-toolkit"
 compiler = "auto"
 ```
+
+For standard gettext layouts, point both directories at the locale tree:
+
+```toml
+[tool.setuptools-gettext]
+source_dir = "breezy/locale"
+build_dir = "breezy/locale"
+```
+
+Flat ``po/de.po`` files compile to
+``<build_dir>/de/LC_MESSAGES/<project-name>.mo`` by default. Standard
+``locale/de/LC_MESSAGES/django.po`` files compile to
+``<build_dir>/de/LC_MESSAGES/django.mo`` by default. Passing
+``--output-base`` overrides the output name for both layouts.
 
 ## Compilation tool
 
