@@ -24,6 +24,8 @@ requires = ["setuptools", "setuptools-gettext"]
 source_dir = "po"
 # directory in which the generated .mo files are placed when building
 build_dir = "breezy/locale"
+# compiler to use: "auto", "msgfmt", or "translate-toolkit"
+compiler = "auto"
 ```
 
 ## Compilation tool
@@ -31,9 +33,14 @@ build_dir = "breezy/locale"
 By default, either ``msgfmt`` or the `translate-toolkit` package is used to
 compile the .po files into .mo files - whichever is available.
 
+Set ``compiler = "msgfmt"`` or ``compiler = "translate-toolkit"`` in
+``[tool.setuptools-gettext]`` to force a compiler from ``pyproject.toml``.
+Use ``compiler = "auto"`` to keep the default automatic detection.
+
 The ``--msgfmt`` option can be used to force the use of ``msgfmt``, and the
 ``--translate-toolkit`` option can be used to force the use of the
-translate-toolkit.
+translate-toolkit. Command line options take precedence over the
+``pyproject.toml`` setting.
 
 At the moment, ``msgfmt`` is preferred. In the future, the translate-toolkit
 will become the default.

@@ -55,6 +55,97 @@ def test_example_install():
             os.chdir(old_cwd)
 
 
+def test_load_pyproject_config_default_compiler():
+    dist = Distribution()
+
+    load_pyproject_config(dist, {})
+
+    assert getattr(dist, "gettext_compiler") == "auto"
+
+
+@pytest.mark.parametrize("compiler", ["auto", "msgfmt", "translate-toolkit"])
+def test_load_pyproject_config_compiler(compiler):
+    dist = Distribution()
+
+    load_pyproject_config(dist, {"compiler": compiler})
+
+    assert getattr(dist, "gettext_compiler") == compiler
+
+
+def test_load_pyproject_config_rejects_invalid_compiler():
+    dist = Distribution()
+
+    with pytest.raises(ValueError, match="Unsupported setuptools-gettext"):
+        load_pyproject_config(dist, {"compiler": "invalid"})
+
+
+def test_build_mo_uses_msgfmt_compiler_from_config():
+    with TemporaryDirectory() as td:
+        source_dir = os.path.join(td, "po")
+        os.mkdir(source_dir)
+        with open(os.path.join(source_dir, "nl.po"), "w") as f:
+            f.write("")
+        dist = Distribution(attrs={"name": "example"})
+
+        load_pyproject_config(
+            dist, {"source_dir": source_dir, "compiler": "msgfmt"}
+        )
+        cmd = build_mo(dist)
+        cmd.initialize_options()
+        cmd.finalize_options()
+
+    assert cmd.msgfmt is True
+    assert cmd.translate_toolkit is None
+
+
+def test_build_mo_uses_translate_toolkit_compiler_from_config():
+    with TemporaryDirectory() as td:
+        source_dir = os.path.join(td, "po")
+        os.mkdir(source_dir)
+        with open(os.path.join(source_dir, "nl.po"), "w") as f:
+            f.write("")
+        dist = Distribution(attrs={"name": "example"})
+
+        load_pyproject_config(
+            dist, {"source_dir": source_dir, "compiler": "translate-toolkit"}
+        )
+        cmd = build_mo(dist)
+        cmd.initialize_options()
+        cmd.finalize_options()
+
+    assert cmd.msgfmt is None
+    assert cmd.translate_toolkit is True
+
+
+@pytest.mark.parametrize(
+    ("compiler", "flag", "expected_msgfmt", "expected_translate_toolkit"),
+    [
+        ("translate-toolkit", "msgfmt", True, None),
+        ("msgfmt", "translate_toolkit", None, True),
+    ],
+)
+def test_build_mo_cli_compiler_flags_override_config(
+    compiler, flag, expected_msgfmt, expected_translate_toolkit
+):
+    with TemporaryDirectory() as td:
+        source_dir = os.path.join(td, "po")
+        os.mkdir(source_dir)
+        with open(os.path.join(source_dir, "nl.po"), "w") as f:
+            f.write("")
+        dist = Distribution(attrs={"name": "example"})
+
+        load_pyproject_config(
+            dist, {"source_dir": source_dir, "compiler": compiler}
+        )
+        cmd = build_mo(dist)
+        cmd.initialize_options()
+        setattr(cmd, flag, True)
+        cmd.finalize_options()
+
+    assert cmd.msgfmt is expected_msgfmt
+    assert cmd.translate_toolkit is expected_translate_toolkit
+
+
 def test_find_source_files_example():
     found = find_source_files("example")
     rel = sorted(os.path.relpath(p, "example") for p in found)

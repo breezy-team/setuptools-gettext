@@ -34,6 +34,8 @@ __version__ = (0, 1, 17)
 DEFAULT_SOURCE_DIR = "po"
 DEFAULT_BUILD_DIR = "locale"
 DEFAULT_LANGUAGE = "en"
+DEFAULT_COMPILER = "auto"
+VALID_COMPILERS = ("auto", "msgfmt", "translate-toolkit")
 
 
 def has_translate_toolkit() -> bool:
@@ -108,7 +110,7 @@ class build_mo(Command):
         ("lang=", None, "Comma-separated list of languages to process"),
     ]
 
-    boolean_options = ["force"]
+    boolean_options = ["force", "translate-toolkit", "msgfmt"]
 
     def initialize_options(self):
         self.build_dir = None
@@ -130,6 +132,14 @@ class build_mo(Command):
                 getattr(self.distribution, "gettext_build_dir", None)
                 or DEFAULT_BUILD_DIR
             )
+        if self.msgfmt is None and self.translate_toolkit is None:
+            compiler = getattr(
+                self.distribution, "gettext_compiler", DEFAULT_COMPILER
+            )
+            if compiler == "msgfmt":
+                self.msgfmt = True
+            elif compiler == "translate-toolkit":
+                self.translate_toolkit = True
         if self.lang is None:
             self.lang = lang_from_dir(self.source_dir)
         else:
@@ -416,6 +426,26 @@ def load_pyproject_config(dist: Distribution, cfg) -> None:
     dist.gettext_default_language = (  # type: ignore
         cfg.get("default_language") or DEFAULT_LANGUAGE
     )
+    dist.gettext_compiler = _normalize_compiler(  # type: ignore
+        cfg.get("compiler", DEFAULT_COMPILER)
+    )
+
+
+def _normalize_compiler(compiler) -> str:
+    if compiler is None:
+        return DEFAULT_COMPILER
+    if not isinstance(compiler, str):
+        raise ValueError(
+            "Unsupported setuptools-gettext compiler "
+            f"{compiler!r}; expected one of: {', '.join(VALID_COMPILERS)}"
+        )
+    compiler = compiler.strip().lower()
+    if compiler not in VALID_COMPILERS:
+        raise ValueError(
+            "Unsupported setuptools-gettext compiler "
+            f"{compiler!r}; expected one of: {', '.join(VALID_COMPILERS)}"
+        )
+    return compiler
 
 
 def find_source_files(dirname: str = "") -> List[str]:
