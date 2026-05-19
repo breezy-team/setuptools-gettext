@@ -39,7 +39,7 @@ from .catalog import (
     parse_lang,
 )
 
-__version__ = (0, 1, 17)
+__version__ = (0, 1, 18)
 DEFAULT_SOURCE_DIR = "po"
 DEFAULT_BUILD_DIR = "locale"
 DEFAULT_LANGUAGE = "en"
