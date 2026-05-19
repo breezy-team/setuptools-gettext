@@ -14,3 +14,4 @@ source_dir = "po"
 # Set the build directory, to make it easier to find the compiled catalogs
 # in the source tree.
 build_dir = "hallowereld/locale"
+install_layout = "package"

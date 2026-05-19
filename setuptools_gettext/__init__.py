@@ -38,6 +38,13 @@ from .catalog import (
     mo_basename,
     parse_lang,
 )
+from .install_layout import (
+    DEFAULT_INSTALL_LAYOUT,
+    add_package_data_for_build_dir,
+    normalize_install_layout,
+    package_install_dir,
+    package_locale_info,
+)
 
 __version__ = (0, 1, 18)
 DEFAULT_SOURCE_DIR = "po"
@@ -80,6 +87,25 @@ def _resolve_source_dir(dist: Distribution) -> str:
         source_dir = _detect_default_source_dir()
         dist.gettext_source_dir = source_dir  # type: ignore
     return source_dir
+
+
+def _insert_sub_command(command_class, name, predicate, before=None) -> None:
+    sub_commands = [
+        sub_command
+        for sub_command in command_class.sub_commands
+        if sub_command[0] != name
+    ]
+    entry = (name, predicate)
+    if before is not None:
+        for index, sub_command in enumerate(sub_commands):
+            if sub_command[0] == before:
+                sub_commands.insert(index, entry)
+                break
+        else:
+            sub_commands.append(entry)
+    else:
+        sub_commands.append(entry)
+    command_class.sub_commands = sub_commands
 
 
 # Imported from distutils.util in Python 3.11:
@@ -153,6 +179,15 @@ class build_mo(Command):
                 getattr(self.distribution, "gettext_build_dir", None)
                 or DEFAULT_BUILD_DIR
             )
+        if (
+            getattr(
+                self.distribution,
+                "gettext_install_layout",
+                DEFAULT_INSTALL_LAYOUT,
+            )
+            == "package"
+        ):
+            add_package_data_for_build_dir(self.distribution, self.build_dir)
         if self.msgfmt is None and self.translate_toolkit is None:
             compiler = getattr(
                 self.distribution, "gettext_compiler", DEFAULT_COMPILER
@@ -330,16 +365,30 @@ class install_mo(Command):
         self.data_files: List[str] = []
         self.build_dir = None
         self.install_dir = None
+        self.install_layout = DEFAULT_INSTALL_LAYOUT
         self.outfiles: List[str] = []
+        self.package_locale: Optional[Tuple[str, str, str]] = None
         self.root = None
         self.force = 0
 
     def finalize_options(self) -> None:
         if self.build_dir is None:
-            self.build_dir = self.distribution.gettext_build_dir  # type: ignore
+            self.build_dir = self.distribution.gettext_build_dir  # type: ignore[attr-defined]
+        self.install_layout = getattr(
+            self.distribution,
+            "gettext_install_layout",
+            DEFAULT_INSTALL_LAYOUT,
+        )
+        if self.install_layout == "package":
+            install_dir_option = "install_lib"
+            self.package_locale = package_locale_info(
+                self.distribution, self.build_dir
+            )
+        else:
+            install_dir_option = "install_data"
         self.set_undefined_options(
             "install",
-            ("install_data", "install_dir"),
+            (install_dir_option, "install_dir"),
             ("root", "root"),
             ("force", "force"),
         )
@@ -349,10 +398,17 @@ class install_mo(Command):
         self.mkpath(self.install_dir)
         assert self.build_dir is not None
         for filepath in gather_built_files(self.build_dir):
-            langfile = filepath[len(self.build_dir.rstrip("/") + "/") :]
-            install_dir = os.path.dirname(
-                os.path.join("share/locale", langfile)
-            )
+            langfile = os.path.relpath(filepath, self.build_dir)
+            if self.install_layout == "package":
+                assert self.package_locale is not None
+                package, _package_dir, relative_build_dir = self.package_locale
+                install_dir = package_install_dir(
+                    package, relative_build_dir, langfile
+                )
+            else:
+                install_dir = os.path.dirname(
+                    os.path.join("share/locale", langfile)
+                )
 
             # it's a tuple with path to install to and a list of files
             dir = convert_path(install_dir)
@@ -446,18 +502,20 @@ def _load_pyproject_toml(path: str = "pyproject.toml") -> dict:
 
 
 def pyprojecttoml_config(dist: Distribution) -> None:
-    build = dist.get_command_class("build")
-    build.sub_commands.append(("build_mo", has_gettext))
-    clean = dist.get_command_class("clean")
-    clean.sub_commands.append(("clean_mo", has_gettext))
-    install = dist.get_command_class("install")
-    install.sub_commands.append(("install_mo", has_gettext))
-
     load_pyproject_config(dist, _load_pyproject_toml())
+
+    build = dist.get_command_class("build")
+    _insert_sub_command(build, "build_mo", has_gettext, before="build_py")
+    clean = dist.get_command_class("clean")
+    _insert_sub_command(clean, "clean_mo", has_gettext)
+    install = dist.get_command_class("install")
+    _insert_sub_command(install, "install_mo", has_gettext)
 
 
 def load_pyproject_config(dist: Distribution, cfg) -> None:
-    dist.gettext_source_dir_configured = bool(cfg.get("source_dir"))  # type: ignore
+    dist.gettext_source_dir_configured = (  # type: ignore
+        bool(cfg.get("source_dir"))
+    )
     dist.gettext_source_dir = (  # type: ignore
         cfg.get("source_dir") or _detect_default_source_dir()
     )
@@ -469,6 +527,9 @@ def load_pyproject_config(dist: Distribution, cfg) -> None:
     )
     dist.gettext_compiler = _normalize_compiler(  # type: ignore
         cfg.get("compiler", DEFAULT_COMPILER)
+    )
+    dist.gettext_install_layout = normalize_install_layout(  # type: ignore
+        cfg.get("install_layout", DEFAULT_INSTALL_LAYOUT)
     )
 
 
