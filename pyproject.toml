@@ -50,7 +50,7 @@ setuptools_gettext = "setuptools_gettext:find_source_files"
 
 [project.optional-dependencies]
 dev = [
-    "ruff==0.15.18",
+    "ruff==0.15.20",
     "mypy==2.1.0"
 ]
 translate-toolkit = [
