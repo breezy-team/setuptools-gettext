@@ -369,7 +369,7 @@ class install_mo(Command):
         self.outfiles: List[str] = []
         self.package_locale: Optional[Tuple[str, str, str]] = None
         self.root = None
-        self.force = 0
+        self.force = False
 
     def finalize_options(self) -> None:
         if self.build_dir is None:
