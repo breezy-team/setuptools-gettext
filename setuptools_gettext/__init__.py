@@ -46,7 +46,7 @@ from .install_layout import (
     package_locale_info,
 )
 
-__version__ = (0, 1, 18)
+__version__ = (0, 1, 19)
 DEFAULT_SOURCE_DIR = "po"
 DEFAULT_BUILD_DIR = "locale"
 DEFAULT_LANGUAGE = "en"
