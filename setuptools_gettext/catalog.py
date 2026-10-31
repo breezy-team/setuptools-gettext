@@ -22,7 +22,6 @@
 import os
 from dataclasses import dataclass
 from glob import glob
-from typing import List, Optional
 
 LC_MESSAGES = "LC_MESSAGES"
 
@@ -35,8 +34,8 @@ class Catalog:
     uses_output_base: bool
 
 
-def lang_from_dir(source_dir: os.PathLike) -> List[str]:
-    lang: List[str] = []
+def lang_from_dir(source_dir: os.PathLike) -> list[str]:
+    lang: list[str] = []
     if not os.path.isdir(source_dir):
         return lang
     for i in os.listdir(source_dir):
@@ -45,11 +44,11 @@ def lang_from_dir(source_dir: os.PathLike) -> List[str]:
     return lang
 
 
-def parse_lang(lang: str) -> List[str]:
+def parse_lang(lang: str) -> list[str]:
     return [i.strip() for i in lang.split(",") if i.strip()]
 
 
-def _flat_catalogs_from_dir(source_dir: os.PathLike) -> List[Catalog]:
+def _flat_catalogs_from_dir(source_dir: os.PathLike) -> list[Catalog]:
     return [
         Catalog(
             lang=lang,
@@ -61,7 +60,7 @@ def _flat_catalogs_from_dir(source_dir: os.PathLike) -> List[Catalog]:
     ]
 
 
-def _standard_catalogs_from_dir(source_dir: os.PathLike) -> List[Catalog]:
+def _standard_catalogs_from_dir(source_dir: os.PathLike) -> list[Catalog]:
     catalogs = []
     pattern = os.path.join(source_dir, "*", LC_MESSAGES, "*.po")
     for po in glob(pattern):
@@ -79,8 +78,8 @@ def _standard_catalogs_from_dir(source_dir: os.PathLike) -> List[Catalog]:
 
 
 def discover_catalogs(
-    source_dir: os.PathLike, lang: Optional[List[str]] = None
-) -> List[Catalog]:
+    source_dir: os.PathLike, lang: list[str] | None = None
+) -> list[Catalog]:
     if lang is None:
         catalogs = _flat_catalogs_from_dir(source_dir)
         catalogs.extend(_standard_catalogs_from_dir(source_dir))

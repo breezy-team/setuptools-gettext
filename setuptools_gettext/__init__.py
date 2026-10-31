@@ -23,7 +23,6 @@
 import logging
 import os
 import sys
-from typing import Dict, List, Optional, Tuple
 
 from setuptools import Command
 from setuptools.dist import Distribution
@@ -222,7 +221,7 @@ class build_mo(Command):
         )
 
     def _check_duplicate_outputs(self) -> None:
-        targets: Dict[str, str] = {}
+        targets: dict[str, str] = {}
         for catalog in self.catalogs:
             mo = self._mo_path(catalog)
             if mo in targets:
@@ -333,7 +332,7 @@ class clean_mo(Command):
                     os.unlink(os.path.join(root, file_))
 
 
-def gather_built_files(build_dir) -> List[str]:
+def gather_built_files(build_dir) -> list[str]:
     import glob
 
     return glob.glob(build_dir + "/*/LC_MESSAGES/*.mo")
@@ -359,15 +358,15 @@ class install_mo(Command):
 
     boolean_options = ["force"]
 
-    build_dir: Optional[str]
+    build_dir: str | None
 
     def initialize_options(self) -> None:
-        self.data_files: List[str] = []
+        self.data_files: list[str] = []
         self.build_dir = None
         self.install_dir = None
         self.install_layout = DEFAULT_INSTALL_LAYOUT
-        self.outfiles: List[str] = []
-        self.package_locale: Optional[Tuple[str, str, str]] = None
+        self.outfiles: list[str] = []
+        self.package_locale: tuple[str, str, str] | None = None
         self.root = None
         self.force = False
 
@@ -433,7 +432,7 @@ class install_mo(Command):
 class update_pot(Command):
     description: str = "update the .pot file"
 
-    user_options: List[Tuple[str, str, str]] = []  # type: ignore
+    user_options: list[tuple[str, str, str]] = []  # type: ignore
 
     def initialize_options(self) -> None:
         pass
@@ -550,7 +549,7 @@ def _normalize_compiler(compiler) -> str:
     return compiler
 
 
-def find_source_files(dirname: str = "") -> List[str]:
+def find_source_files(dirname: str = "") -> list[str]:
     """Find .po/.pot source files for inclusion in the sdist.
 
     Registered as a ``setuptools.file_finders`` entry point so that

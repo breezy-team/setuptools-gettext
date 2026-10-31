@@ -19,7 +19,6 @@
 """Install layout helpers for compiled gettext catalogs."""
 
 import os
-from typing import List, Tuple
 
 from setuptools.dist import Distribution
 from setuptools.errors import OptionError
@@ -51,7 +50,7 @@ def normalize_install_layout(install_layout) -> str:
 
 def package_locale_info(
     dist: Distribution, build_dir: str
-) -> Tuple[str, str, str]:
+) -> tuple[str, str, str]:
     matches = []
     for package in getattr(dist, "packages", None) or []:
         package_dir = _get_package_dir(dist, package)
@@ -108,7 +107,7 @@ def _get_package_dir(dist: Distribution, package: str) -> str:
     if not package_dir:
         result = os.path.join(*path) if path else ""
     else:
-        tail: List[str] = []
+        tail: list[str] = []
         while path:
             package_name = ".".join(path)
             if package_name in package_dir:
